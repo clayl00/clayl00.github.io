@@ -1,0 +1,76 @@
+<div class="home-layout">
+  <aside class="sidebar-panel" style="display: flex; flex-direction: column;">
+    
+    <div style="padding-bottom: 16px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+      <div class="sidebar-header" style="margin-bottom: 8px;">
+        <h4>Public</h4>
+        <div class="input-group">
+          <input v-model="newChatTitle" class="input-styled" placeholder="Public title..." @keyup.enter="createChat" />
+          <button class="btn-icon" @click="createChat" :disabled="!newChatTitle.trim()">+</button>
+        </div>
+      </div>
+
+      <div class="sidebar-header">
+        <h4>Direct Messages</h4>
+        <div class="input-group">
+          <input v-model="recipientHandle" class="input-styled" placeholder="User handle..." @keyup.enter="createDM" />
+          <button class="btn-icon" @click="createDM" :disabled="!recipientHandle.trim()">+</button>
+        </div>
+        <div v-if="dmError" class="error-message" style="color: var(--error-color, red); font-size: 0.8em; margin-top: 4px;">
+          {{ dmError }}
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-lists-container" style="flex: 1; overflow-y: auto; padding-top: 16px;">
+      
+      <details open style="margin-bottom: 16px;">
+        <summary style="cursor: pointer; font-weight: 600; padding: 4px 16px; user-select: none; color: var(--ink-light);">
+          Public Chats ({{ groupChats.length }})
+        </summary>
+        <ul class="chat-list" style="margin-top: 8px;">
+          <li v-for="chat in groupChats" :key="chat.value?.channel" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
+            <router-link :to="'/chat/' + chat.value.channel" class="chat-item" style="flex-grow: 1; border-bottom: none;">
+              {{ chat.value.title }}
+            </router-link>
+            <button @click.prevent="trashChat(chat)" class="btn-icon" style="width: 24px; height: 24px; background: transparent; color: #512da8; border: 1px solid #512da8;" title="Move to Trash">X</button>
+          </li>
+          <li v-if="groupChats.length === 0" style="padding: 8px 32px; color: gray; font-size: 0.85em;">No public chats.</li>
+        </ul>
+      </details>
+
+      <details open>
+        <summary style="cursor: pointer; font-weight: 600; padding: 4px 16px; user-select: none; color: var(--ink-light);">
+          Direct Messages ({{ privateMessages.length }})
+        </summary>
+        <ul class="chat-list" style="margin-top: 8px;">
+          <li v-for="chat in privateMessages" :key="chat.value?.channel" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
+            <router-link :to="'/chat/' + chat.value.channel" class="chat-item" style="flex-grow: 1; border-bottom: none;">
+              {{ 
+                (chat.value?.participants && session?.actor && chat.value.participants.find(p => p !== session.actor)) 
+                ? (getProfileName(chat.value.participants.find(p => p !== session.actor)) || chat.value.title)
+                : chat.value.title 
+              }}
+            </router-link>
+            <button @click.prevent="trashChat(chat)" class="btn-icon" style="width: 24px; height: 24px; background: transparent; color: #512da8; border: 1px solid #512da8;" title="Move to Trash">X</button>
+          </li>
+          <li v-if="privateMessages.length === 0" style="padding: 8px 32px; color: gray; font-size: 0.85em;">No direct messages.</li>
+        </ul>
+      </details>
+    </div>
+    
+    <div style="padding: 16px; border-top: 1px solid var(--border-color); text-align: center;">
+      <router-link to="/trash" style="color: var(--ink-light); text-decoration: none; font-weight: bold; font-family: var(--font-sans); font-size: 0.9em;">
+        &#128465; View Trash
+      </router-link>
+    </div>
+  </aside>
+
+  <main class="empty-state">
+    <div class="watermark-clef">&#119070;</div>
+    <div style="text-align:center; z-index:1;">
+      <h2 style="font-family: var(--font-serif); margin-bottom: 8px;">Welcome to the Desk</h2>
+      <p style="font-family: var(--font-sans); color: var(--ink-light);">Select a score or start a conversation.</p>
+    </div>
+  </main>
+</div>

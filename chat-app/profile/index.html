@@ -1,0 +1,37 @@
+<div class="profile-layout">
+  <div class="profile-card">
+    <router-link to="/" class="btn-back" style="display: inline-flex; margin-bottom: 10px;">
+      <span>&larr;</span> Back to Chat
+    </router-link>
+
+    <h2>Ensemble Profile</h2>
+    
+    <div v-if="!session" style="color: var(--ink-light);">
+      Please log in to edit your profile.
+    </div>
+
+    <div v-else>
+      <div v-if="status === 'dirty'" class="feedback-banner dirty">
+        <span>You have unsaved changes.</span>
+      </div>
+      <div v-if="status === 'saved'" class="feedback-banner saved">
+        <span>Profile saved successfully!</span>
+      </div>
+
+      <div class="form-group">
+        <label>Display Name (Handle)</label>
+        <input class="input-styled" style="width: 100%" v-model="formData.handle" @input="markDirty" placeholder="How should people know you?" />
+      </div>
+
+      <div class="form-group">
+        <label>Musical Bio</label>
+        <textarea class="textarea-styled" style="width: 100%; min-height: 100px;" v-model="formData.bio" @input="markDirty" placeholder="Tell us about your background, instruments, or current projects..."></textarea>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 30px;">
+        <button class="btn-primary" @click="saveProfile" :disabled="status !== 'dirty'">Save Profile</button>
+        <button class="btn-outline" @click="revertChanges" v-if="status === 'dirty'">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

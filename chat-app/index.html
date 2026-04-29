@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Composer Central</title>
+        
+        <script type="importmap">
+            {
+                "imports": {
+                    "vue": "https://cdn.jsdelivr.net/npm/vue@3.5.32/dist/vue.esm-browser.js",
+                    "vue-router": "https://cdn.jsdelivr.net/npm/vue-router@5.0.4/dist/vue-router.esm-browser.prod.js",
+                    "@graffiti-garden/implementation-local": "https://cdn.jsdelivr.net/npm/@graffiti-garden/implementation-local@1.2.0/dist/browser/index.js",
+                    "@graffiti-garden/implementation-decentralized": "https://cdn.jsdelivr.net/npm/@graffiti-garden/implementation-decentralized@0.0.9/dist/browser/index.js",
+                    "@graffiti-garden/wrapper-vue": "https://cdn.jsdelivr.net/npm/@graffiti-garden/wrapper-vue@1.2.2/dist/browser/plugin.mjs"
+                }
+            }
+        </script>
+        
+        <link rel="stylesheet" href="./style.css" />
+        <script src="./main.js" type="module"></script>
+    </head>
+    <body>
+        <div id="app">Loading...</div>
+        
+        <template id="template">
+            <header class="app-header" v-if="session">
+                <router-link to="/" class="brand-container">
+                    <span class="logo-clef">&#119070;</span>
+                    <span class="site-title">Composer Central</span>
+                </router-link>
+
+                <nav class="nav-links">
+                    <router-link to="/profile">Profile</router-link>
+                    <button class="btn-outline" @click="logout">Log Out</button>
+                </nav>
+            </header>
+
+            <main>
+                <router-view></router-view>
+            </main>
+        </template>
+    </body>
+</html>

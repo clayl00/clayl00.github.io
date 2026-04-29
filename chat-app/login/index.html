@@ -1,0 +1,43 @@
+<div class="login-layout" style="display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--paper);">
+  <div class="login-card" style="background: white; padding: 60px 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-float); text-align: center; max-width: 400px; width: 100%; border: 1px solid var(--border-color);">
+    
+    <div style="margin-bottom: 30px;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px;">
+        <path d="M9 18V5l12-2v13"></path>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="16" r="3"></circle>
+      </svg>
+      <h2 style="font-family: var(--font-serif); color: var(--ink); margin-bottom: 8px;">Composer Central</h2>
+      <p style="font-family: var(--font-sans); color: var(--ink-light); font-size: 0.95rem;">Decentralized collaboration for the scoring desk.</p>
+    </div>
+
+    <div v-if="session === undefined" class="loading-state" style="font-family: var(--font-sans); color: var(--ink-light); font-style: italic;">
+      Initializing network...
+    </div>
+
+    <div v-else-if="session === null" class="logged-out-state">
+      <button class="btn-primary" @click="login" style="width: 100%; font-size: 1.1rem; padding: 12px;">
+        Connect Identity
+      </button>
+      <p style="margin-top: 16px; font-size: 0.8rem; color: var(--ink-light); font-family: var(--font-sans);">
+        Authenticates securely via the Graffiti Network.
+      </p>
+    </div>
+
+    <div v-else class="logged-in-state" style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="background: var(--sidebar-bg); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-family: var(--font-sans); font-size: 0.9rem; word-break: break-all;">
+        <span style="color: var(--ink-light); display: block; margin-bottom: 4px; font-size: 0.8rem; text-transform: uppercase; font-weight: bold;">Connected as</span>
+        <strong>{{ session.actor }}</strong>
+      </div>
+      
+      <router-link to="/" class="btn-primary" style="text-decoration: none; width: 100%; display: inline-block; padding: 12px; font-size: 1.1rem; box-sizing: border-box;">
+        Enter Workspace
+      </router-link>
+      
+      <button class="btn-outline" @click="logout" style="width: 100%;">
+        Disconnect
+      </button>
+    </div>
+
+  </div>
+</div>

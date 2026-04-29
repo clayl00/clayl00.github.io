@@ -1,0 +1,63 @@
+<div class="chat-container">
+  <header class="chat-header">
+    <router-link to="/" class="btn-back"><span>&larr;</span> BACK</router-link>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <h3 v-if="!isEditingTitle">{{ chatTitle }}</h3>
+      <input v-else v-model="editedTitle" class="input-styled" @keyup.enter="saveTitle" style="font-family: inherit; font-size: 1.2rem; font-weight: bold; width: auto;" />
+      <button v-if="!isEditingTitle" @click="startEditing" class="btn-icon" style="width: 28px; height: 28px; font-size: 0.9rem;">&#9998;</button>
+      <div v-else style="display: flex; gap: 8px;">
+        <button @click="saveTitle" class="btn-small">Save</button>
+        <button @click="isEditingTitle = false" class="btn-small btn-outline" style="padding: 4px 10px; font-size: 0.7rem; border-radius: 50px;">Cancel</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="messages-feed" ref="feedContainer">
+    <div v-for="msg in messages" :key="msg.url" class="message-card" :class="msg.actor === session?.actor ? 'mine' : 'theirs'">
+      <div class="profile-info">
+        <strong>{{ getProfileName(msg.actor) }}</strong>
+        <span>{{ new Date(msg.value.published).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
+      </div>
+      
+      <div class="message-bubble">
+        <div v-if="msg.value.attachment" class="pdf-attachment">
+          <div class="pdf-header">
+            <span class="pdf-name">&#128196; {{ msg.value.attachment.name }}</span>
+            <a v-if="resolvedMedia[msg.value.attachment.url] && resolvedMedia[msg.value.attachment.url] !== 'loading'" :href="resolvedMedia[msg.value.attachment.url]" :download="msg.value.attachment.name" class="pdf-download-btn">Download</a>
+          </div>
+          <div v-if="resolvedMedia[msg.value.attachment.url] === 'loading'" class="pdf-loading-state">Fetching PDF...</div>
+          <iframe v-else-if="resolvedMedia[msg.value.attachment.url]" :src="resolvedMedia[msg.value.attachment.url]" class="pdf-viewer"></iframe>
+          
+          <div class="suggestion-actions">
+            <router-link :to="`/suggestion/${chatId}/${encodeURIComponent(msg.url)}?action=view`" class="btn-view-sug" :class="{ 'has-content': hasSuggestions(msg.url) }" style="text-decoration: none;">
+              {{ hasSuggestions(msg.url) ? 'View suggestions' : 'No suggestions yet' }}
+            </router-link>
+            <router-link :to="`/suggestion/${chatId}/${encodeURIComponent(msg.url)}?action=make`" class="btn-make-sug" style="text-decoration: none;">
+              Make suggestion
+            </router-link>
+          </div>
+        </div>
+        <div v-if="msg.value.content">{{ msg.value.content }}</div>
+      </div>
+
+      <div v-if="msg.actor === session?.actor" class="message-actions">
+        <button class="delete-btn" @click="deleteMessage(msg)" :disabled="isDeleting.has(msg.url)">{{ isDeleting.has(msg.url) ? 'deleting...' : 'delete' }}</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="composer-area">
+    <div v-if="pendingAttachment" class="attachment-preview">
+      <span>&#128196; {{ pendingAttachment.name }}</span>
+      <button @click="clearAttachment" class="remove-btn" title="Remove attachment">&times;</button>
+    </div>
+    <div class="composer-inputs">
+      <input type="file" ref="fileInput" accept="application/pdf" style="display: none;" @change="attachFile" />
+      <button class="btn-icon" @click="$refs.fileInput.click()" title="Attach PDF" :disabled="isSending" style="background: transparent; color: var(--ink-light); border: 1px solid var(--border-color); flex-shrink: 0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+      </button>
+      <textarea class="textarea-styled" ref="composer" v-model="myMessage" @input="autoResize" @keydown.enter="handleEnter" placeholder="Compose your thoughts..." rows="1" :disabled="isSending"></textarea>
+      <button class="btn-primary" @click="sendMessage" :disabled="isSending || (!myMessage.trim() && !pendingAttachment)">{{ isSending ? 'Sending...' : 'Send' }}</button>
+    </div>
+  </footer>
+</div>

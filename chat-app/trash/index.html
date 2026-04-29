@@ -1,0 +1,31 @@
+<div class="home-layout">
+  <aside class="sidebar-panel" style="display: flex; flex-direction: column;">
+    <div class="sidebar-header" style="padding-bottom: 16px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+      <router-link to="/" class="btn-back" style="margin-bottom: 16px; display: inline-block;"><span>&larr;</span> BACK HOME</router-link>
+      <h4>&#128465; Trash</h4>
+      <p style="font-size: 0.85rem; color: var(--ink-light); font-family: var(--font-sans);">Chats you have hidden.</p>
+    </div>
+
+    <div class="chat-lists-container" style="flex: 1; overflow-y: auto; padding-top: 16px;">
+      <ul class="chat-list" style="margin-top: 8px;">
+        <li v-for="chat in trashedChatsList" :key="chat.value?.channel" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
+          <div class="chat-item" style="flex-grow: 1; border-bottom: none; opacity: 0.7;">
+            {{ chat.value.title }}
+          </div>
+          <button @click="restoreChat(chat)" class="btn-small" style="background: var(--ink-light); color: white;" title="Restore to Home">Restore</button>
+        </li>
+        <li v-if="trashedChatsList.length === 0" style="padding: 16px 24px; color: gray; font-size: 0.9em; text-align: center;">
+          Trash is empty.
+        </li>
+      </ul>
+    </div>
+  </aside>
+
+  <main class="empty-state">
+    <div class="watermark-clef">&#119070;</div>
+    <div style="text-align:center; z-index:1;">
+      <h2 style="font-family: var(--font-serif); margin-bottom: 8px;">Trash</h2>
+      <p style="font-family: var(--font-sans); color: var(--ink-light);">Restore chats to view them again.</p>
+    </div>
+  </main>
+</div>
