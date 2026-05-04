@@ -33,8 +33,8 @@
           Public Chats ({{ groupChats.length }})
         </summary>
         <ul class="chat-list" style="margin-top: 8px;">
-          <li v-for="chat in groupChats" :key="chat.value?.channel" :class="{ 'fade-out-chat': isTrashing.includes(chat.value?.channel) }" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
-            <router-link :to="'/chat/' + chat.value.channel" class="chat-item" style="flex-grow: 1; border-bottom: none;">
+          <li v-for="chat in groupChats" :key="chat.value?.channel" class="sidebar-chat-row" :class="{ 'fade-out-chat': isTrashing.includes(chat.value?.channel) }">
+            <router-link :to="'/chat/' + chat.value.channel" class="chat-item">
               {{ chat.value.title }}
             </router-link>
             <button @click.prevent="trashChat(chat)" class="btn-icon" style="width: 28px; height: 28px; background: transparent; color: var(--ink-light); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center;" title="Move to Trash">
@@ -50,8 +50,8 @@
           Direct Messages ({{ privateMessages.length }})
         </summary>
         <ul class="chat-list" style="margin-top: 8px;">
-          <li v-for="chat in privateMessages" :key="chat.value?.channel" :class="{ 'fade-out-chat': isTrashing.includes(chat.value?.channel) }" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
-            <router-link :to="'/chat/' + chat.value.channel" class="chat-item" style="flex-grow: 1; border-bottom: none; display: flex; align-items: center; gap: 8px;">
+          <li v-for="chat in privateMessages" :key="chat.value?.channel" class="sidebar-chat-row" :class="{ 'fade-out-chat': isTrashing.includes(chat.value?.channel) }">
+            <router-link :to="'/chat/' + chat.value.channel" class="chat-item" style="gap: 8px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; opacity: 0.5;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
               <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 {{ (chat.value?.participants && session?.actor && chat.value.participants.find(p => p !== session.actor)) ? (getProfileName(chat.value.participants.find(p => p !== session.actor)) || chat.value.title) : chat.value.title }}
