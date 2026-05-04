@@ -1,19 +1,28 @@
 <div class="home-layout">
   <aside class="sidebar-panel" style="display: flex; flex-direction: column;">
     <div class="sidebar-header" style="padding-bottom: 16px; border-bottom: 1px solid rgba(0,0,0,0.05);">
-      <router-link to="/" class="btn-back" style="margin-bottom: 16px; display: inline-block;"><span>&larr;</span> BACK HOME</router-link>
-      <h4>&#128465; Trash</h4>
+      <router-link to="/" class="btn-back" style="margin-bottom: 16px; display: inline-flex; align-items: center; gap: 6px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        BACK HOME
+      </router-link>
+      <h4 style="display: flex; align-items: center; gap: 8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.8;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        Trash
+      </h4>
       <p style="font-size: 0.85rem; color: var(--ink-light); font-family: var(--font-sans);">Chats you have hidden.</p>
     </div>
 
     <div class="chat-lists-container" style="flex: 1; overflow-y: auto; padding-top: 16px;">
       <ul class="chat-list" style="margin-top: 8px;">
-        <li v-for="chat in trashedChatsList" :key="chat.value?.channel" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
+        
+        <li v-for="chat in trashedChatsList" :key="chat.value?.channel" :class="{ 'fade-out-chat': isRestoring.includes(chat.value?.channel) }" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
+          
           <div class="chat-item" style="flex-grow: 1; border-bottom: none; opacity: 0.7;">
             {{ chat.value.title }}
           </div>
           <button @click="restoreChat(chat)" class="btn-small" style="background: var(--ink-light); color: white;" title="Restore to Home">Restore</button>
         </li>
+        
         <li v-if="trashedChatsList.length === 0" style="padding: 16px 24px; color: gray; font-size: 0.9em; text-align: center;">
           Trash is empty.
         </li>
