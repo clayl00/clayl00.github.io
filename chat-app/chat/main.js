@@ -1,4 +1,4 @@
-import { ref, computed, nextTick, watch } from "vue";
+import { ref, computed, nextTick, watch, onMounted } from "vue";
 import { useGraffiti, useGraffitiSession, useGraffitiDiscover } from "@graffiti-garden/wrapper-vue";
 
 export default async () => ({
@@ -11,10 +11,9 @@ export default async () => ({
     const graffiti = useGraffiti();
     const session = useGraffitiSession();
     
-    // PRESERVED REFS
     const myMessage = ref("");
     const composer = ref(null); 
-    const feedContainer = ref(null); // Added reference for the message feed
+    const feedContainer = ref(null); // Reference for the message feed
     const isDeleting = ref(new Set());
     const isSending = ref(false);
     const pendingAttachment = ref(null);
@@ -26,7 +25,6 @@ export default async () => ({
     const globalDirectory = ["composer-central-public"];
     const myDirChannel = computed(() => session.value ? [`my-private-directory-${session.value.actor}`] : []);
 
-    // 1. Meta Discovery
     const { objects: pubMeta } = useGraffitiDiscover(globalDirectory, broadSchema);
     const { objects: privMeta } = useGraffitiDiscover(myDirChannel, broadSchema, session);
     
@@ -36,29 +34,35 @@ export default async () => ({
     
     const chatTitle = computed(() => chatData.value?.title || "Loading...");
 
-    // 2. Message Feed
     const { objects: messageObjects } = useGraffitiDiscover(computed(() => [props.chatId]), broadSchema, session);
     
-    // FIX: Corrected sorting to properly arrange messages chronologically
     const messages = computed(() => [...messageObjects.value]
         .filter(m => m?.value?.content !== undefined || m?.value?.attachment)
         .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0)));
 
-    // FIX: Auto-scroll to bottom whenever messages load or update
-    watch(messages, () => {
-      nextTick(() => {
+    // ==========================================
+    // FIX: Bulletproof Scroll-to-Bottom Logic
+    // ==========================================
+    const scrollToBottom = () => {
+      // A tiny delay ensures the browser has finished calculating the heights of new elements
+      setTimeout(() => {
         if (feedContainer.value) {
           feedContainer.value.scrollTop = feedContainer.value.scrollHeight;
         }
-      });
-    }, { deep: true, immediate: true });
+      }, 50); 
+    };
 
-    // 3. Suggestions & Profiles
+    // 1. Scroll whenever new messages arrive
+    watch(messages, scrollToBottom, { deep: true });
+
+    // 2. Scroll immediately when the component attaches to the screen
+    onMounted(scrollToBottom);
+    // ==========================================
+
     const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
     const actorChannels = computed(() => [...new Set([...messages.value.map(m => m.actor), session.value?.actor].filter(Boolean))]);
     const { objects: profiles } = useGraffitiDiscover(actorChannels, broadSchema, session);
 
-    // PRESERVED: Profile Name Resolver
     function getProfileName(actorId) {
       const latest = profiles.value.filter(p => p.channels?.includes(actorId) && p.value?.type === 'Profile').sort((a, b) => b.value.published - a.value.published)[0];
       return latest?.value?.handle || actorId.substring(0, 8); 
@@ -68,7 +72,6 @@ export default async () => ({
       return allSuggestions.value.some(s => s.channels.includes(msgUrl) && s.value?.type === 'Suggestion');
     }
 
-    // PRESERVED: Media Watcher
     watch(messages, (newMsgs) => {
       newMsgs.forEach(msg => {
         const url = msg.value?.attachment?.url;
@@ -82,42 +85,27 @@ export default async () => ({
       });
     }, { immediate: true, deep: true });
 
-    // 4. FIXED ACTIONS
-    function startEditing() {
-      editedTitle.value = chatTitle.value;
-      isEditingTitle.value = true;
-    }
-
     async function saveTitle() {
       if (!editedTitle.value.trim() || !session.value || !chatData.value) return;
-      
       const isPrivate = chatData.value.isPrivate;
       const channels = isPrivate ? [`my-private-directory-${session.value.actor}`] : globalDirectory;
       const allowed = isPrivate ? [session.value.actor] : undefined;
-
-      // Update local directory
       await graffiti.post({
         value: { ...chatData.value, title: editedTitle.value, published: Date.now() },
-        channels, 
-        allowed
+        channels, allowed
       }, session.value);
-
-      // If private, send an updated invite to the recipient so their sidebar title changes
       if (isPrivate && chatData.value.participants) {
         const recipient = chatData.value.participants.find(a => a !== session.value.actor);
         if (recipient) {
           await graffiti.post({
             value: { ...chatData.value, type: "ChatInvite", title: editedTitle.value, published: Date.now() },
-            channels: [`discovery-${recipient}`],
-            allowed: [recipient]
+            channels: [`discovery-${recipient}`], allowed: [recipient]
           }, session.value);
         }
       }
-
       isEditingTitle.value = false;
     }
 
-    // PRESERVED: Send Message with encryption support
     async function sendMessage() {
       if (!session.value || (!myMessage.value.trim() && !pendingAttachment.value)) return;
       isSending.value = true;
@@ -138,35 +126,19 @@ export default async () => ({
       } finally { isSending.value = false; }
     }
 
-    // PRESERVED: Deletion and UI Helpers
-    async function deleteMessage(m) {
-      isDeleting.value.add(m.url);
-      try { await graffiti.delete(m.url, session.value); } 
-      finally { isDeleting.value.delete(m.url); }
-    }
-
-    const autoResize = () => { 
-      if (composer.value) { 
-        composer.value.style.height = 'auto'; 
-        composer.value.style.height = composer.value.scrollHeight + 'px'; 
-      } 
-    };
-
-    const handleEnter = (e) => { 
-      if (!e.shiftKey) { 
-        e.preventDefault(); 
-        sendMessage(); 
-      } 
-    };
-
     return { 
       messages, myMessage, sendMessage, session, chatTitle, composer, hasSuggestions,
-      getProfileName, deleteMessage, isDeleting, resolvedMedia, isSending,
+      getProfileName, deleteMessage: async (m) => {
+        isDeleting.value.add(m.url);
+        try { await graffiti.delete(m.url, session.value); } finally { isDeleting.value.delete(m.url); }
+      }, 
+      isDeleting, resolvedMedia, isSending,
       attachFile: (e) => pendingAttachment.value = e.target.files[0],
       pendingAttachment, clearAttachment: () => pendingAttachment.value = null,
-      autoResize, handleEnter,
-      isEditingTitle, editedTitle, startEditing, saveTitle,
-      feedContainer // Make sure to return the container ref to the template
+      autoResize: () => { if (composer.value) { composer.value.style.height = 'auto'; composer.value.style.height = composer.value.scrollHeight + 'px'; } },
+      handleEnter: (e) => { if (!e.shiftKey) { e.preventDefault(); sendMessage(); } },
+      isEditingTitle, editedTitle, startEditing: () => { editedTitle.value = chatTitle.value; isEditingTitle.value = true; }, saveTitle,
+      feedContainer // Returned to bind to template ref
     };
   }
 });
