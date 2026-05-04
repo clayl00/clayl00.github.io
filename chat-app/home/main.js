@@ -15,6 +15,9 @@ export default async () => ({
     const newChatTitle = ref("");
     const recipientHandle = ref(""); 
     const dmError = ref("");
+    
+    // ANIMATION TRACKER: Keeps track of which chats are currently sliding away
+    const isTrashing = ref(new Set());
 
     const broadSchema = { properties: { value: { type: "object" } } };
 
@@ -26,16 +29,13 @@ export default async () => ({
     const { objects: publicEntries } = useGraffitiDiscover(globalChannel, broadSchema);
     const { objects: incomingInvites } = useGraffitiDiscover(discoveryChannel, broadSchema, session);
     
-    // TRASH LOGIC: Discover trash flags in the user's private directory
     const trashSchema = { properties: { value: { properties: { type: { const: "ChatTrash" } } } } };
     const { objects: trashEntries } = useGraffitiDiscover(myDirChannel, trashSchema, session);
     const trashedChannels = computed(() => new Set(trashEntries.value.map(t => t.value.targetChannel)));
 
-    // Filter discovery results manually
     const chatsFound = computed(() => [...privateEntries.value, ...publicEntries.value].filter(o => o.value?.type === 'Chat'));
     const invitesFound = computed(() => incomingInvites.value.filter(o => o.value?.type === 'ChatInvite'));
 
-    // Profile Discovery for Sidebar Names
     const dmActors = computed(() => {
       const actors = new Set();
       chatsFound.value.forEach(c => {
@@ -59,7 +59,6 @@ export default async () => ({
       return participants.find(a => a !== session.value.actor) || "";
     }
 
-    // Handshake: Move invites into private directory
     watch(invitesFound, (invites) => {
       invites.forEach(async (invite) => {
         const exists = chatsFound.value.some(c => c.value.channel === invite.value.channel);
@@ -76,7 +75,6 @@ export default async () => ({
     const allChats = computed(() => {
       const unique = {};
       chatsFound.value.forEach(c => { unique[c.value.channel] = c; });
-      // TRASH LOGIC: Filter out chats that are in the trashedChannels Set
       return Object.values(unique)
         .filter(c => !trashedChannels.value.has(c.value.channel))
         .sort((a, b) => (b.value.published || 0) - (a.value.published || 0));
@@ -103,7 +101,6 @@ export default async () => ({
         const recipientActor = await graffiti.handleToActor(recipientHandle.value);
         if (!recipientActor) { dmError.value = "Handle not found."; return; }
         
-        // SELF-DM PREVENTION
         if (recipientActor === session.value.actor) { 
           dmError.value = "You cannot DM yourself."; 
           return; 
@@ -125,20 +122,29 @@ export default async () => ({
       } catch (e) { dmError.value = "Network error."; }
     }
 
-    // TRASH LOGIC: Post a flag to hide this chat
     async function trashChat(chat) {
       if (!session.value) return;
-      await graffiti.post({
-        value: { type: "ChatTrash", targetChannel: chat.value.channel, published: Date.now() },
-        channels: [`my-private-directory-${session.value.actor}`],
-        allowed: [session.value.actor]
-      }, session.value);
+      
+      // 1. Trigger the CSS animation
+      isTrashing.value.add(chat.value.channel);
+      
+      // 2. Wait 400ms for the slide-out animation to finish before posting to the database
+      setTimeout(async () => {
+        await graffiti.post({
+          value: { type: "ChatTrash", targetChannel: chat.value.channel, published: Date.now() },
+          channels: [`my-private-directory-${session.value.actor}`],
+          allowed: [session.value.actor]
+        }, session.value);
+        
+        // Cleanup state
+        isTrashing.value.delete(chat.value.channel);
+      }, 400); 
     }
 
     return { 
       chats: allChats, privateMessages, groupChats, newChatTitle, 
       createChat, recipientHandle, createDM, dmError, session, 
-      getOtherActor, getProfileName, trashChat
+      getOtherActor, getProfileName, trashChat, isTrashing
     };
   }
 });

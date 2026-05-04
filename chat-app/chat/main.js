@@ -13,7 +13,7 @@ export default async () => ({
     
     const myMessage = ref("");
     const composer = ref(null); 
-    const feedContainer = ref(null); // Reference for the message feed
+    const feedContainer = ref(null); 
     const isDeleting = ref(new Set());
     const isSending = ref(false);
     const pendingAttachment = ref(null);
@@ -40,11 +40,7 @@ export default async () => ({
         .filter(m => m?.value?.content !== undefined || m?.value?.attachment)
         .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0)));
 
-    // ==========================================
-    // FIX: Bulletproof Scroll-to-Bottom Logic
-    // ==========================================
     const scrollToBottom = () => {
-      // A tiny delay ensures the browser has finished calculating the heights of new elements
       setTimeout(() => {
         if (feedContainer.value) {
           feedContainer.value.scrollTop = feedContainer.value.scrollHeight;
@@ -52,12 +48,8 @@ export default async () => ({
       }, 50); 
     };
 
-    // 1. Scroll whenever new messages arrive
     watch(messages, scrollToBottom, { deep: true });
-
-    // 2. Scroll immediately when the component attaches to the screen
     onMounted(scrollToBottom);
-    // ==========================================
 
     const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
     const actorChannels = computed(() => [...new Set([...messages.value.map(m => m.actor), session.value?.actor].filter(Boolean))]);
@@ -128,17 +120,23 @@ export default async () => ({
 
     return { 
       messages, myMessage, sendMessage, session, chatTitle, composer, hasSuggestions,
-      getProfileName, deleteMessage: async (m) => {
+      getProfileName, isDeleting, resolvedMedia, isSending,
+      
+      // ANIMATION DELAY: Triggers animation class, then deletes
+      deleteMessage: async (m) => {
         isDeleting.value.add(m.url);
-        try { await graffiti.delete(m.url, session.value); } finally { isDeleting.value.delete(m.url); }
+        setTimeout(async () => {
+          try { await graffiti.delete(m.url, session.value); } 
+          finally { isDeleting.value.delete(m.url); }
+        }, 300); // Wait 300ms for CSS animation to finish
       }, 
-      isDeleting, resolvedMedia, isSending,
+      
       attachFile: (e) => pendingAttachment.value = e.target.files[0],
       pendingAttachment, clearAttachment: () => pendingAttachment.value = null,
       autoResize: () => { if (composer.value) { composer.value.style.height = 'auto'; composer.value.style.height = composer.value.scrollHeight + 'px'; } },
       handleEnter: (e) => { if (!e.shiftKey) { e.preventDefault(); sendMessage(); } },
       isEditingTitle, editedTitle, startEditing: () => { editedTitle.value = chatTitle.value; isEditingTitle.value = true; }, saveTitle,
-      feedContainer // Returned to bind to template ref
+      feedContainer 
     };
   }
 });

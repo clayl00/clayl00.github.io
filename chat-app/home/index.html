@@ -29,7 +29,7 @@
           Public Chats ({{ groupChats.length }})
         </summary>
         <ul class="chat-list" style="margin-top: 8px;">
-          <li v-for="chat in groupChats" :key="chat.value?.channel" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
+          <li v-for="chat in groupChats" :key="chat.value?.channel" :class="{ 'trash-slide-out': isTrashing.has(chat.value?.channel) }" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
             <router-link :to="'/chat/' + chat.value.channel" class="chat-item" style="flex-grow: 1; border-bottom: none;">
               {{ chat.value.title }}
             </router-link>
@@ -44,7 +44,7 @@
           Direct Messages ({{ privateMessages.length }})
         </summary>
         <ul class="chat-list" style="margin-top: 8px;">
-          <li v-for="chat in privateMessages" :key="chat.value?.channel" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
+          <li v-for="chat in privateMessages" :key="chat.value?.channel" :class="{ 'trash-slide-out': isTrashing.has(chat.value?.channel) }" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
             <router-link :to="'/chat/' + chat.value.channel" class="chat-item" style="flex-grow: 1; border-bottom: none;">
               {{ 
                 (chat.value?.participants && session?.actor && chat.value.participants.find(p => p !== session.actor)) 

@@ -18,11 +18,13 @@
   </header>
 
   <div class="messages-feed" ref="feedContainer">
-    <div v-for="msg in messages" :key="msg.url" class="message-card" :class="msg.actor === session?.actor ? 'mine' : 'theirs'">
+    <div v-for="msg in messages" :key="msg.url" class="message-card" :class="[msg.actor === session?.actor ? 'mine' : 'theirs', { 'message-delete-out': isDeleting.has(msg.url) }]">
+      
       <div class="profile-info">
         <strong>{{ getProfileName(msg.actor) }}</strong>
         <span>{{ new Date(msg.value?.published || Date.now()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) }}</span>
       </div>
+      
       <div class="message-bubble">
         <div v-if="msg.value?.attachment" class="pdf-attachment">
           <div class="pdf-header">
