@@ -19,23 +19,38 @@
 
   <div class="messages-feed" ref="feedContainer">
     <div v-for="msg in messages" :key="msg.url" class="message-card" :class="[msg.actor === session?.actor ? 'mine' : 'theirs', { 'message-delete-out': isDeleting.has(msg.url) }]">
-      
       <div class="profile-info">
         <strong>{{ getProfileName(msg.actor) }}</strong>
         <span>{{ new Date(msg.value?.published || Date.now()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) }}</span>
       </div>
-      
       <div class="message-bubble">
+        
         <div v-if="msg.value?.attachment" class="pdf-attachment">
-          <div class="pdf-header">
-            <span class="pdf-name" style="display:flex;align-items:center;gap:6px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-              {{ msg.value.attachment.name }}
-            </span>
-            <a v-if="resolvedMedia[msg.value.attachment.url] && resolvedMedia[msg.value.attachment.url] !== 'loading'" :href="resolvedMedia[msg.value.attachment.url]" :download="msg.value.attachment.name" class="pdf-download-btn">Download</a>
-          </div>
-          <div v-if="resolvedMedia[msg.value.attachment.url] === 'loading'" class="pdf-loading-state">Fetching PDF...</div>
-          <iframe v-else-if="resolvedMedia[msg.value.attachment.url]" :src="resolvedMedia[msg.value.attachment.url]" class="pdf-viewer"></iframe>
+          
+          <template v-if="msg.value.attachment.mediaType === 'application/pdf' || !msg.value.attachment.mediaType">
+            <div class="pdf-header">
+              <span class="pdf-name" style="display:flex;align-items:center;gap:6px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                {{ msg.value.attachment.name }}
+              </span>
+              <a v-if="resolvedMedia[msg.value.attachment.url] && resolvedMedia[msg.value.attachment.url] !== 'loading'" :href="resolvedMedia[msg.value.attachment.url]" :download="msg.value.attachment.name" class="pdf-download-btn">Download</a>
+            </div>
+            <div v-if="resolvedMedia[msg.value.attachment.url] === 'loading'" class="pdf-loading-state">Fetching PDF...</div>
+            <iframe v-else-if="resolvedMedia[msg.value.attachment.url]" :src="resolvedMedia[msg.value.attachment.url]" class="pdf-viewer"></iframe>
+          </template>
+
+          <template v-else-if="msg.value.attachment.mediaType.startsWith('audio/')">
+            <div class="pdf-header" style="margin-bottom: 12px;">
+              <span class="pdf-name" style="display:flex;align-items:center;gap:6px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                {{ msg.value.attachment.name }}
+              </span>
+              <a v-if="resolvedMedia[msg.value.attachment.url] && resolvedMedia[msg.value.attachment.url] !== 'loading'" :href="resolvedMedia[msg.value.attachment.url]" :download="msg.value.attachment.name" class="pdf-download-btn">Download</a>
+            </div>
+            <div v-if="resolvedMedia[msg.value.attachment.url] === 'loading'" class="pdf-loading-state">Fetching Audio...</div>
+            <audio v-else-if="resolvedMedia[msg.value.attachment.url]" controls :src="resolvedMedia[msg.value.attachment.url]" style="width: 100%; height: 44px; outline: none; border-radius: 50px; background: white;"></audio>
+          </template>
+
           <div class="suggestion-actions">
             <router-link :to="'/suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=view'" class="btn-view-sug" :class="{'has-content':hasSuggestions(msg.url)}" style="text-decoration:none;">{{ hasSuggestions(msg.url) ? 'View suggestions' : 'No suggestions yet' }}</router-link>
             <router-link :to="'/suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=make'" class="btn-make-sug" style="text-decoration:none;">Make suggestion</router-link>
@@ -51,13 +66,15 @@
 
   <footer class="composer-area">
     <div v-if="pendingAttachment" class="attachment-preview" style="display:flex;align-items:center;gap:8px;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+      <svg v-if="pendingAttachment.type.startsWith('audio/')" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+      <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+      
       <span>{{ pendingAttachment.name }}</span>
       <button @click="clearAttachment" class="remove-btn" style="display:flex;align-items:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
     </div>
     <div class="composer-inputs">
-      <input type="file" ref="fileInput" accept="application/pdf" style="display:none;" @change="attachFile" />
-      <button class="btn-icon" @click="$refs.fileInput.click()" :disabled="isSending" style="background:transparent;color:var(--ink-light);border:1px solid var(--border-color);flex-shrink:0;">
+      <input type="file" ref="fileInput" accept="application/pdf, audio/*" style="display:none;" @change="attachFile" />
+      <button class="btn-icon" @click="$refs.fileInput.click()" title="Attach File" :disabled="isSending" style="background:transparent;color:var(--ink-light);border:1px solid var(--border-color);flex-shrink:0;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
       </button>
       <textarea class="textarea-styled" ref="composer" v-model="myMessage" @input="autoResize" @keydown.enter="handleEnter" placeholder="Compose..." rows="1" :disabled="isSending"></textarea>

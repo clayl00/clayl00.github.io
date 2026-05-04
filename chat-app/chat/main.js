@@ -69,8 +69,12 @@ export default async () => ({
         const url = msg.value?.attachment?.url;
         if (url && url.startsWith('graffiti:') && !resolvedMedia.value[url]) {
           resolvedMedia.value[url] = 'loading'; 
-          graffiti.getMedia(url, { types: ['application/pdf'] }, session.value).then(media => {
-            const blob = media.data instanceof Blob ? media.data : new Blob([media.data], { type: 'application/pdf' });
+          
+          // DYNAMIC MEDIA TYPE: Fallback to application/pdf for older messages
+          const mediaType = msg.value.attachment.mediaType || 'application/pdf';
+          
+          graffiti.getMedia(url, { types: [mediaType] }, session.value).then(media => {
+            const blob = media.data instanceof Blob ? media.data : new Blob([media.data], { type: mediaType });
             resolvedMedia.value[url] = URL.createObjectURL(blob);
           }).catch(() => resolvedMedia.value[url] = null);
         }
@@ -105,7 +109,8 @@ export default async () => ({
         let attachment = undefined;
         if (pendingAttachment.value) {
           const url = await graffiti.postMedia({ data: pendingAttachment.value }, session.value);
-          attachment = { name: pendingAttachment.value.name, mediaType: 'application/pdf', url };
+          // DYNAMIC MEDIA TYPE: Extract the type straight from the browser's File object
+          attachment = { name: pendingAttachment.value.name, mediaType: pendingAttachment.value.type, url };
         }
         await graffiti.post({ 
             value: { content: myMessage.value, attachment, published: Date.now() }, 
@@ -121,16 +126,13 @@ export default async () => ({
     return { 
       messages, myMessage, sendMessage, session, chatTitle, composer, hasSuggestions,
       getProfileName, isDeleting, resolvedMedia, isSending,
-      
-      // ANIMATION DELAY: Triggers animation class, then deletes
       deleteMessage: async (m) => {
         isDeleting.value.add(m.url);
         setTimeout(async () => {
           try { await graffiti.delete(m.url, session.value); } 
           finally { isDeleting.value.delete(m.url); }
-        }, 300); // Wait 300ms for CSS animation to finish
+        }, 300); 
       }, 
-      
       attachFile: (e) => pendingAttachment.value = e.target.files[0],
       pendingAttachment, clearAttachment: () => pendingAttachment.value = null,
       autoResize: () => { if (composer.value) { composer.value.style.height = 'auto'; composer.value.style.height = composer.value.scrollHeight + 'px'; } },
