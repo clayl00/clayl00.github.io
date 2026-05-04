@@ -16,8 +16,8 @@ export default async () => ({
     const recipientHandle = ref(""); 
     const dmError = ref("");
     
-    // ANIMATION TRACKER: Keeps track of which chats are currently sliding away
-    const isTrashing = ref(new Set());
+    // FIX: Using an Array instead of a Set guarantees Vue will trigger the animation class
+    const isTrashing = ref([]);
 
     const broadSchema = { properties: { value: { type: "object" } } };
 
@@ -125,10 +125,10 @@ export default async () => ({
     async function trashChat(chat) {
       if (!session.value) return;
       
-      // 1. Trigger the CSS animation
-      isTrashing.value.add(chat.value.channel);
+      // 1. Add channel to array to instantly trigger the CSS fade animation
+      isTrashing.value.push(chat.value.channel);
       
-      // 2. Wait 400ms for the slide-out animation to finish before posting to the database
+      // 2. Wait 350ms for the fade-out to finish, then post to database
       setTimeout(async () => {
         await graffiti.post({
           value: { type: "ChatTrash", targetChannel: chat.value.channel, published: Date.now() },
@@ -136,9 +136,9 @@ export default async () => ({
           allowed: [session.value.actor]
         }, session.value);
         
-        // Cleanup state
-        isTrashing.value.delete(chat.value.channel);
-      }, 400); 
+        // Cleanup state by removing from array
+        isTrashing.value = isTrashing.value.filter(id => id !== chat.value.channel);
+      }, 350); 
     }
 
     return { 

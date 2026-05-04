@@ -430,6 +430,69 @@ details[open] summary ~ * {
 
 .empty-state > div { position: relative; z-index: 1; }
 
+/* =========================================================
+   NEW ANIMATIONS
+   ========================================================= */
+
+/* 1. Dropdown Animation */
+details {
+  overflow: hidden;
+}
+
+details summary {
+  outline: none;
+}
+
+details[open] summary ~ * {
+  animation: expandDropdown 0.35s ease-out forwards;
+}
+
+@keyframes expandDropdown {
+  0% { 
+    opacity: 0; 
+    max-height: 0; 
+    transform: translateY(-10px); 
+  }
+  100% { 
+    opacity: 1; 
+    max-height: 1000px; 
+    transform: translateY(0); 
+  }
+}
+
+/* 2. Chat Trashing Animation (Fade Out) */
+.fade-out-chat {
+  animation: simpleFadeOut 0.35s ease-out forwards;
+  pointer-events: none; /* Prevents double-clicking while it fades */
+}
+
+@keyframes simpleFadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 3. Message deletion animation (Shrink and fade) */
+.message-delete-out {
+  animation: shrinkFadeOut 0.3s ease-in forwards;
+}
+
+@keyframes shrinkFadeOut {
+  0% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+  100% { 
+    opacity: 0; 
+    transform: scale(0.85); 
+    margin-bottom: -40px; 
+  }
+}
+
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(10px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
