@@ -1,0 +1,72 @@
+<div class="chat-container">
+  <header class="chat-header">
+    <router-link :to="`/chat/${chatId}`" class="btn-back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      BACK TO CHAT
+    </router-link>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <h3>Audio Suggestions</h3>
+    </div>
+  </header>
+
+  <div class="suggestion-layout">
+    
+    <div class="pdf-workspace" style="align-items: center;">
+      <div v-if="audioSrc === 'loading'" style="padding: 40px; text-align: center; color: var(--ink-light);">Loading audio file...</div>
+      
+      <div v-else-if="audioSrc" style="width: 100%; max-width: 600px; padding: 60px 40px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+        <div style="text-align: center; margin-bottom: 30px; color: var(--primary);">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+        </div>
+        <audio ref="audioPlayer" controls :src="audioSrc" style="width: 100%; outline: none; border-radius: 50px;"></audio>
+      </div>
+    </div>
+
+    <div class="suggestion-sidebar">
+      <div class="suggestion-list">
+        <div v-if="suggestions.length === 0" style="text-align: center; color: var(--ink-light); margin-top: 40px; font-style: italic;">
+          No suggestions yet.
+        </div>
+        
+        <div v-for="sug in suggestions" :key="sug.url" class="suggestion-card">
+          <div class="profile-info">
+            <strong>{{ getProfileName(sug.actor) }}</strong>
+            <span>{{ new Date(sug.value.published).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
+          </div>
+          
+          <div style="margin-top: 8px; font-weight: bold; color: var(--primary);">
+            Time: {{ sug.value.time }}
+          </div>
+
+          <p style="margin-top: 8px; font-size: 0.95rem; line-height: 1.4;">{{ sug.value.content }}</p>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+            <button class="btn-small btn-outline" @click="jumpToTime(sug.value.time)">Jump to Time</button>
+            <button v-if="session && sug.actor === session.actor" class="delete-btn" @click="deleteSuggestion(sug.url)">delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="suggestion-composer">
+        <div v-if="!isMakingSuggestion">
+          <button class="btn-primary" style="width: 100%;" @click="startMakingSuggestion">Make New Suggestion</button>
+        </div>
+        <div v-else>
+           <div style="margin-bottom: 12px;">
+             <label style="font-weight: bold; font-size: 0.8rem; display: block; margin-bottom: 4px;">Time (e.g. 1:23 or 83s) *</label>
+             <input type="text" class="input-styled" v-model="newTime" placeholder="e.g. 1:23" style="width: 100%; padding: 8px 12px;" />
+           </div>
+
+           <label style="font-weight: bold; font-size: 0.8rem; margin-bottom: 4px; display: block;">Feedback *</label>
+           <textarea class="textarea-styled" v-model="newSuggestionText" placeholder="Type your suggestion..." style="width: 100%; margin-bottom: 12px;"></textarea>
+
+           <div style="display: flex; gap: 8px;">
+             <button class="btn-primary" style="flex-grow: 1;" @click="postSuggestion" :disabled="!newSuggestionText.trim() || !newTime.trim()">Post</button>
+             <button class="btn-outline" @click="cancelSuggestion">Cancel</button>
+           </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>

@@ -15,6 +15,7 @@ const router = createRouter({
     { path: "/chat/:chatId", component: loadComponent("chat"), props: true },
     // Route now expects chatId and messageId as direct segments
     { path: "/suggestion/:chatId/:messageId(.*)", component: loadComponent("suggestion"), props: true },
+    { path: "/audio-suggestion/:chatId/:messageId", component: loadComponent("audio-suggestion"), props: true },
     { path: "/login", component: loadComponent("login") },
     { path: "/trash", component: loadComponent("trash") }
   ],

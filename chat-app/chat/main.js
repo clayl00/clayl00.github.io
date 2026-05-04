@@ -70,7 +70,6 @@ export default async () => ({
         if (url && url.startsWith('graffiti:') && !resolvedMedia.value[url]) {
           resolvedMedia.value[url] = 'loading'; 
           
-          // DYNAMIC MEDIA TYPE: Fallback to application/pdf for older messages
           const mediaType = msg.value.attachment.mediaType || 'application/pdf';
           
           graffiti.getMedia(url, { types: [mediaType] }, session.value).then(media => {
@@ -109,7 +108,6 @@ export default async () => ({
         let attachment = undefined;
         if (pendingAttachment.value) {
           const url = await graffiti.postMedia({ data: pendingAttachment.value }, session.value);
-          // DYNAMIC MEDIA TYPE: Extract the type straight from the browser's File object
           attachment = { name: pendingAttachment.value.name, mediaType: pendingAttachment.value.type, url };
         }
         await graffiti.post({ 
@@ -133,7 +131,22 @@ export default async () => ({
           finally { isDeleting.value.delete(m.url); }
         }, 300); 
       }, 
-      attachFile: (e) => pendingAttachment.value = e.target.files[0],
+      
+      attachFile: (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // 25MB File Size Limit Check
+        const MAX_SIZE = 25 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+          alert("File is too large! The maximum allowed size for uploads is 25MB.");
+          e.target.value = ""; 
+          return;
+        }
+        
+        pendingAttachment.value = file;
+      },
+      
       pendingAttachment, clearAttachment: () => pendingAttachment.value = null,
       autoResize: () => { if (composer.value) { composer.value.style.height = 'auto'; composer.value.style.height = composer.value.scrollHeight + 'px'; } },
       handleEnter: (e) => { if (!e.shiftKey) { e.preventDefault(); sendMessage(); } },

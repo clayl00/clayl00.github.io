@@ -37,6 +37,11 @@
             </div>
             <div v-if="resolvedMedia[msg.value.attachment.url] === 'loading'" class="pdf-loading-state">Fetching PDF...</div>
             <iframe v-else-if="resolvedMedia[msg.value.attachment.url]" :src="resolvedMedia[msg.value.attachment.url]" class="pdf-viewer"></iframe>
+            
+            <div class="suggestion-actions">
+              <router-link :to="'/suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=view'" class="btn-view-sug" :class="{'has-content':hasSuggestions(msg.url)}" style="text-decoration:none;">{{ hasSuggestions(msg.url) ? 'View suggestions' : 'No suggestions yet' }}</router-link>
+              <router-link :to="'/suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=make'" class="btn-make-sug" style="text-decoration:none;">Make suggestion</router-link>
+            </div>
           </template>
 
           <template v-else-if="msg.value.attachment.mediaType.startsWith('audio/')">
@@ -49,12 +54,13 @@
             </div>
             <div v-if="resolvedMedia[msg.value.attachment.url] === 'loading'" class="pdf-loading-state">Fetching Audio...</div>
             <audio v-else-if="resolvedMedia[msg.value.attachment.url]" controls :src="resolvedMedia[msg.value.attachment.url]" style="width: 100%; height: 44px; outline: none; border-radius: 50px; background: white;"></audio>
+            
+            <div class="suggestion-actions">
+              <router-link :to="'/audio-suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=view'" class="btn-view-sug" :class="{'has-content':hasSuggestions(msg.url)}" style="text-decoration:none;">{{ hasSuggestions(msg.url) ? 'View suggestions' : 'No suggestions yet' }}</router-link>
+              <router-link :to="'/audio-suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=make'" class="btn-make-sug" style="text-decoration:none;">Make suggestion</router-link>
+            </div>
           </template>
 
-          <div class="suggestion-actions">
-            <router-link :to="'/suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=view'" class="btn-view-sug" :class="{'has-content':hasSuggestions(msg.url)}" style="text-decoration:none;">{{ hasSuggestions(msg.url) ? 'View suggestions' : 'No suggestions yet' }}</router-link>
-            <router-link :to="'/suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=make'" class="btn-make-sug" style="text-decoration:none;">Make suggestion</router-link>
-          </div>
         </div>
         <div v-if="msg.value?.content">{{ msg.value.content }}</div>
       </div>
