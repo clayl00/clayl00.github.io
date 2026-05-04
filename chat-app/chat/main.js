@@ -14,6 +14,7 @@ export default async () => ({
     // PRESERVED REFS
     const myMessage = ref("");
     const composer = ref(null); 
+    const feedContainer = ref(null); // Added reference for the message feed
     const isDeleting = ref(new Set());
     const isSending = ref(false);
     const pendingAttachment = ref(null);
@@ -37,9 +38,20 @@ export default async () => ({
 
     // 2. Message Feed
     const { objects: messageObjects } = useGraffitiDiscover(computed(() => [props.chatId]), broadSchema, session);
+    
+    // FIX: Corrected sorting to properly arrange messages chronologically
     const messages = computed(() => [...messageObjects.value]
         .filter(m => m?.value?.content !== undefined || m?.value?.attachment)
-        .sort((a, b) => (a.value.published || 0) - (a.value.published || 0)));
+        .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0)));
+
+    // FIX: Auto-scroll to bottom whenever messages load or update
+    watch(messages, () => {
+      nextTick(() => {
+        if (feedContainer.value) {
+          feedContainer.value.scrollTop = feedContainer.value.scrollHeight;
+        }
+      });
+    }, { deep: true, immediate: true });
 
     // 3. Suggestions & Profiles
     const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
@@ -70,7 +82,7 @@ export default async () => ({
       });
     }, { immediate: true, deep: true });
 
-    // 4. FIXED ACTIONS: No more 'this' keyword
+    // 4. FIXED ACTIONS
     function startEditing() {
       editedTitle.value = chatTitle.value;
       isEditingTitle.value = true;
@@ -153,7 +165,8 @@ export default async () => ({
       attachFile: (e) => pendingAttachment.value = e.target.files[0],
       pendingAttachment, clearAttachment: () => pendingAttachment.value = null,
       autoResize, handleEnter,
-      isEditingTitle, editedTitle, startEditing, saveTitle
+      isEditingTitle, editedTitle, startEditing, saveTitle,
+      feedContainer // Make sure to return the container ref to the template
     };
   }
 });
