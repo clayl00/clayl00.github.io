@@ -16,9 +16,6 @@ export default async () => ({
     const recipientHandle = ref(""); 
     const dmError = ref("");
 
-    // OPTIMISTIC UI: Tracks items we are currently trashing
-    const pendingTrash = ref(new Set());
-
     const broadSchema = { properties: { value: { type: "object" } } };
 
     const myDirChannel = computed(() => session.value ? [`my-private-directory-${session.value.actor}`] : []);
@@ -76,8 +73,7 @@ export default async () => ({
       const unique = {};
       chatsFound.value.forEach(c => { unique[c.value.channel] = c; });
       return Object.values(unique)
-        // Instantly filter out any items that are currently in the pendingTrash Set
-        .filter(c => !trashedChannels.value.has(c.value.channel) && !pendingTrash.value.has(c.value.channel))
+        .filter(c => !trashedChannels.value.has(c.value.channel))
         .sort((a, b) => (b.value.published || 0) - (a.value.published || 0));
     });
 
@@ -125,21 +121,11 @@ export default async () => ({
 
     async function trashChat(chat) {
       if (!session.value) return;
-      
-      // 1. Instantly trigger the UI animation
-      pendingTrash.value.add(chat.value.channel);
-      
-      try {
-        // 2. Let the network request process in the background
-        await graffiti.post({
-          value: { type: "ChatTrash", targetChannel: chat.value.channel, published: Date.now() },
-          channels: [`my-private-directory-${session.value.actor}`],
-          allowed: [session.value.actor]
-        }, session.value);
-      } catch (error) {
-        // 3. If the network fails, revert the UI so the chat reappears
-        pendingTrash.value.delete(chat.value.channel);
-      }
+      await graffiti.post({
+        value: { type: "ChatTrash", targetChannel: chat.value.channel, published: Date.now() },
+        channels: [`my-private-directory-${session.value.actor}`],
+        allowed: [session.value.actor]
+      }, session.value);
     }
 
     return { 

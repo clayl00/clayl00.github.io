@@ -10,9 +10,6 @@ export default async () => ({
     const graffiti = useGraffiti();
     const session = useGraffitiSession();
     
-    // OPTIMISTIC UI: Tracks items we are currently restoring so we can hide them instantly
-    const pendingRestore = ref(new Set());
-    
     const broadSchema = { properties: { value: { type: "object" } } };
     const myDirChannel = computed(() => session.value ? [`my-private-directory-${session.value.actor}`] : []);
     const globalChannel = ["composer-central-public"];
@@ -32,8 +29,7 @@ export default async () => ({
       chatsFound.value.forEach(c => { unique[c.value.channel] = c; });
       
       return Object.values(unique)
-        // Instantly filter out any items that are currently in the pendingRestore Set
-        .filter(c => trashedChannels.value.has(c.value.channel) && !pendingRestore.value.has(c.value.channel))
+        .filter(c => trashedChannels.value.has(c.value.channel))
         .sort((a, b) => (b.value.published || 0) - (a.value.published || 0));
     });
 
@@ -42,16 +38,7 @@ export default async () => ({
       const trashObj = trashEntries.value.find(t => t.value.targetChannel === chat.value.channel);
       
       if (trashObj) {
-        // 1. Instantly trigger the UI animation
-        pendingRestore.value.add(chat.value.channel);
-        
-        try {
-          // 2. Let the network request process in the background
-          await graffiti.delete(trashObj.url, session.value);
-        } catch (error) {
-          // 3. If the network fails, revert the UI so the chat reappears
-          pendingRestore.value.delete(chat.value.channel);
-        }
+        await graffiti.delete(trashObj.url, session.value);
       }
     }
 
