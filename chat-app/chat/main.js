@@ -1,4 +1,4 @@
-import { ref, computed, nextTick, watch, onMounted } from "vue";
+import { ref, computed, nextTick, watch, onMounted, onUnmounted } from "vue";
 import { useGraffiti, useGraffitiSession, useGraffitiDiscover } from "@graffiti-garden/wrapper-vue";
 
 export default async () => ({
@@ -20,6 +20,7 @@ export default async () => ({
     const resolvedMedia = ref({});
     const isEditingTitle = ref(false);
     const editedTitle = ref("");
+    let mutationObserver = null; // Reference for our observer
 
     const broadSchema = { properties: { value: { type: "object" } } };
     const globalDirectory = ["composer-central-public"];
@@ -40,16 +41,37 @@ export default async () => ({
         .filter(m => m?.value?.content !== undefined || m?.value?.attachment)
         .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0)));
 
+    // ==========================================
+    // BULLETPROOF SCROLL LOGIC (Mutation Observer)
+    // ==========================================
     const scrollToBottom = () => {
-      setTimeout(() => {
-        if (feedContainer.value) {
-          feedContainer.value.scrollTop = feedContainer.value.scrollHeight;
-        }
-      }, 50); 
+      if (feedContainer.value) {
+        feedContainer.value.scrollTop = feedContainer.value.scrollHeight;
+      }
     };
 
-    watch(messages, scrollToBottom, { deep: true });
-    onMounted(scrollToBottom);
+    onMounted(() => {
+      if (feedContainer.value) {
+        // 1. Setup the observer to watch for ANY changes inside the feed
+        mutationObserver = new MutationObserver(() => {
+          scrollToBottom();
+        });
+        
+        // 2. Tell it to watch for child elements being added (messages) and changes within them
+        mutationObserver.observe(feedContainer.value, { childList: true, subtree: true });
+        
+        // 3. Do an initial scroll just in case content is already there
+        scrollToBottom();
+      }
+    });
+
+    onUnmounted(() => {
+      // Clean up the observer when leaving the chat to save memory
+      if (mutationObserver) {
+        mutationObserver.disconnect();
+      }
+    });
+    // ==========================================
 
     const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
     const actorChannels = computed(() => [...new Set([...messages.value.map(m => m.actor), session.value?.actor].filter(Boolean))]);
@@ -64,7 +86,6 @@ export default async () => ({
       return allSuggestions.value.some(s => s.channels.includes(msgUrl) && s.value?.type === 'Suggestion');
     }
 
-    // DATE SEPARATOR LOGIC
     function formatFriendlyDate(date) {
       const today = new Date();
       const yesterday = new Date();
