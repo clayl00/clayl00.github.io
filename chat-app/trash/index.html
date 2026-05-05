@@ -13,20 +13,19 @@
     </div>
 
     <div class="chat-lists-container" style="flex: 1; overflow-y: auto; padding-top: 16px;">
-      <ul class="chat-list" style="margin-top: 8px;">
-        
-        <li v-for="chat in trashedChatsList" :key="chat.value?.channel" :class="{ 'fade-out-chat': isRestoring.includes(chat.value?.channel) }" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
-          
+      
+      <transition-group name="chat-list" tag="ul" class="chat-list" style="margin-top: 8px;">
+        <li v-for="chat in trashedChatsList" :key="chat.value?.channel" style="display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-right: 16px;">
           <div class="chat-item" style="flex-grow: 1; border-bottom: none; opacity: 0.7;">
             {{ chat.value.title }}
           </div>
           <button @click="restoreChat(chat)" class="btn-small" style="background: var(--ink-light); color: white;" title="Restore to Home">Restore</button>
         </li>
-        
-        <li v-if="trashedChatsList.length === 0" style="padding: 16px 24px; color: gray; font-size: 0.9em; text-align: center;">
+        <li v-if="trashedChatsList.length === 0" key="empty-trash" style="padding: 16px 24px; color: gray; font-size: 0.9em; text-align: center;">
           Trash is empty.
         </li>
-      </ul>
+      </transition-group>
+      
     </div>
   </aside>
 

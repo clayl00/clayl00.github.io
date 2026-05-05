@@ -15,9 +15,6 @@ export default async () => ({
     const newChatTitle = ref("");
     const recipientHandle = ref(""); 
     const dmError = ref("");
-    
-    // FIX: Using an Array instead of a Set guarantees Vue will trigger the animation class
-    const isTrashing = ref([]);
 
     const broadSchema = { properties: { value: { type: "object" } } };
 
@@ -124,27 +121,17 @@ export default async () => ({
 
     async function trashChat(chat) {
       if (!session.value) return;
-      
-      // 1. Add channel to array to instantly trigger the CSS fade animation
-      isTrashing.value.push(chat.value.channel);
-      
-      // 2. Wait 350ms for the fade-out to finish, then post to database
-      setTimeout(async () => {
-        await graffiti.post({
-          value: { type: "ChatTrash", targetChannel: chat.value.channel, published: Date.now() },
-          channels: [`my-private-directory-${session.value.actor}`],
-          allowed: [session.value.actor]
-        }, session.value);
-        
-        // Cleanup state by removing from array
-        isTrashing.value = isTrashing.value.filter(id => id !== chat.value.channel);
-      }, 350); 
+      await graffiti.post({
+        value: { type: "ChatTrash", targetChannel: chat.value.channel, published: Date.now() },
+        channels: [`my-private-directory-${session.value.actor}`],
+        allowed: [session.value.actor]
+      }, session.value);
     }
 
     return { 
       chats: allChats, privateMessages, groupChats, newChatTitle, 
       createChat, recipientHandle, createDM, dmError, session, 
-      getOtherActor, getProfileName, trashChat, isTrashing
+      getOtherActor, getProfileName, trashChat
     };
   }
 });

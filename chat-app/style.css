@@ -70,27 +70,24 @@ body {
 .nav-links a:hover, a.router-link-active { color: var(--primary); }
 
 /* =========================================================
-   BUTTONS & INPUTS (UNIFIED HOVER ANIMATIONS)
+   BUTTONS & INPUTS
    ========================================================= */
-.btn-primary { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); display: inline-block; }
-.btn-primary:hover:not(:disabled) { background: var(--primary-hover); transform: scale(1.05); box-shadow: var(--shadow-float); }
+.btn-primary { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-float); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--border-color); padding: 8px 20px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-block; }
-.btn-outline:hover:not(:disabled) { background: rgba(0,0,0,0.03); border-color: var(--ink); transform: scale(1.05); }
+.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--border-color); padding: 8px 20px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); }
+.btn-outline:hover { background: rgba(0,0,0,0.03); border-color: var(--ink); }
 
 .btn-icon { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition); flex-shrink: 0; }
 .btn-icon:hover:not(:disabled) { transform: scale(1.05); }
 .btn-icon:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-danger { background-color: #e74c3c; color: white; padding: 8px 16px; font-size: 0.9rem; border-radius: var(--radius-pill); font-weight: bold; border: none; cursor: pointer; transition: var(--transition); display: inline-block; }
-.btn-danger:hover:not(:disabled) { background-color: #c0392b; transform: scale(1.05); }
+.btn-danger { background-color: #e74c3c; color: white; padding: 8px 16px; font-size: 0.9rem; border-radius: var(--radius-pill); font-weight: bold; border: none; cursor: pointer; transition: var(--transition); }
+.btn-danger:hover { background-color: #c0392b; }
 
-.btn-small { padding: 6px 14px; font-size: 0.8rem; background: var(--primary); border-radius: var(--radius-pill); color: white; border: none; cursor: pointer; transition: var(--transition); display: inline-block; }
-.btn-small:hover:not(:disabled) { transform: scale(1.05); }
-
-.btn-secondary { background: #3d3d3d; border: 1px solid var(--ink); color: white; transition: var(--transition); display: inline-block; }
-.btn-secondary:hover:not(:disabled) { transform: scale(1.05); }
+.btn-small { padding: 6px 14px; font-size: 0.8rem; background: var(--primary); border-radius: var(--radius-pill); color: white; border: none; cursor: pointer; }
+.btn-secondary { background: #3d3d3d; border: 1px solid var(--ink); color: white; }
 
 .input-styled { flex-grow: 1; padding: 10px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-pill); font-family: var(--font-sans); font-size: 0.9rem; transition: var(--transition); background: white; }
 .input-styled:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(81, 45, 168, 0.1); }
@@ -109,7 +106,6 @@ body {
 
 .chat-list { flex-grow: 1; overflow-y: auto; list-style: none; }
 
-/* NEW: Unified Row Wrapper */
 .sidebar-chat-row {
   display: flex;
   align-items: center;
@@ -120,11 +116,9 @@ body {
 .sidebar-chat-row:hover { background: rgba(0,0,0,0.03); }
 .sidebar-chat-row:has(.router-link-active) { background: white; }
 
-/* Pop Animation strictly for the Trash buttons */
 .sidebar-chat-row .btn-icon { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 .sidebar-chat-row .btn-icon:hover { transform: scale(1.25); }
 
-/* Updated chat-item without the background conflict */
 .chat-item { 
   display: flex; 
   align-items: center; 
@@ -172,13 +166,15 @@ body {
   white-space: nowrap; 
   font-family: var(--font-sans);
 }
-.btn-back:hover { color: var(--primary); transform: scale(1.05); }
+.btn-back:hover { color: var(--primary); }
 
 .chat-header h3 { font-family: var(--font-serif); margin: 0; font-size: 1.4rem; color: var(--ink); white-space: nowrap; }
 
 .messages-feed { flex-grow: 1; overflow-y: auto; padding: 40px; display: flex; flex-direction: column; gap: 24px; }
 
 .message-card { display: flex; flex-direction: column; max-width: 80%; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 .message-card.mine { align-self: flex-end; align-items: flex-end; }
 .message-card.theirs { align-self: flex-start; align-items: flex-start; }
@@ -229,8 +225,6 @@ body {
   justify-content: center;
 }
 
-.btn-make-sug:hover, .btn-view-sug:hover { transform: scale(1.05); }
-
 .message-card.mine .btn-make-sug { background: white; color: var(--primary); border: 1px solid white; }
 .message-card.mine .btn-make-sug:hover { background: #f0f0f0; }
 .message-card.mine .btn-view-sug { background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.4); }
@@ -247,8 +241,8 @@ body {
 
 .status-label { font-size: 0.75rem; color: var(--ink-light); margin-top: 4px; font-style: italic; font-family: var(--font-sans); }
 .message-actions { margin-top: 4px; display: flex; gap: 10px; }
-.delete-btn { background: transparent; border: none; color: #999; font-size: 0.75rem; cursor: pointer; padding: 0; text-transform: lowercase; transition: var(--transition); font-family: var(--font-sans); font-weight: 600; display: inline-block; }
-.delete-btn:hover { color: #e74c3c; text-decoration: underline; transform: scale(1.05); }
+.delete-btn { background: transparent; border: none; color: #999; font-size: 0.75rem; cursor: pointer; padding: 0; text-transform: lowercase; transition: color 0.2s; font-family: var(--font-sans); font-weight: 600; }
+.delete-btn:hover { color: #e74c3c; text-decoration: underline; }
 
 .loading-indicator { text-align: center; font-style: italic; opacity: 0.5; padding: 20px; color: var(--ink); font-family: var(--font-sans); }
 
@@ -259,7 +253,7 @@ body {
 .textarea-styled:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(81, 45, 168, 0.1); }
 
 /* =========================================================
-   ATTACHMENT PREVIEW & PDF
+   ATTACHMENT PREVIEW
    ========================================================= */
 .attachment-preview {
   display: flex;
@@ -276,9 +270,12 @@ body {
   animation: fadeIn 0.2s ease;
 }
 
-.attachment-preview .remove-btn { background: transparent; border: none; color: #e74c3c; font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0 4px; transition: var(--transition); display: inline-block; }
-.attachment-preview .remove-btn:hover { transform: scale(1.05); }
+.attachment-preview .remove-btn { background: transparent; border: none; color: #e74c3c; font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0 4px; transition: transform 0.2s; }
+.attachment-preview .remove-btn:hover { transform: scale(1.2); }
 
+/* =========================================================
+   PDF & AUDIO ATTACHMENTS (In Feed)
+   ========================================================= */
 .pdf-attachment { 
   display: flex; 
   flex-direction: column; 
@@ -293,17 +290,11 @@ body {
 
 .pdf-header { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-sans); }
 .pdf-name { font-weight: 500; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; display: flex; align-items: center; gap: 6px; }
-
-.pdf-download-btn { background-color: var(--ink); color: white; text-decoration: none; padding: 6px 12px; border-radius: var(--radius-pill); font-size: 0.8em; font-weight: bold; transition: var(--transition); display: inline-block; }
-.pdf-download-btn:hover { background-color: var(--primary); transform: scale(1.05); }
+.pdf-download-btn { background-color: var(--ink); color: white; text-decoration: none; padding: 6px 12px; border-radius: var(--radius-pill); font-size: 0.8em; font-weight: bold; transition: var(--transition); }
+.pdf-download-btn:hover { background-color: var(--primary); }
 
 .pdf-viewer { width: 100%; height: 650px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background-color: white; }
 
-/* =========================================================
-   PDF & AUDIO ATTACHMENTS (In Feed)
-   ========================================================= */
-
-/* Update this existing class */
 .pdf-loading-state { 
   display: flex;
   align-items: center;
@@ -315,7 +306,6 @@ body {
   font-family: var(--font-sans); 
 }
 
-/* Add the spinner animation */
 .loading-spinner {
   animation: spinner-rotate 1.2s linear infinite;
   opacity: 0.8;
@@ -327,62 +317,19 @@ body {
 }
 
 /* =========================================================
-   NEW ANIMATIONS
+   DATE SEPARATOR 
    ========================================================= */
-
-/* 1. Slide Animation for <details> dropdowns */
-details[open] summary ~ * {
-  animation: slideDownFade 0.3s ease-out forwards;
+.date-separator {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--ink-light);
+  font-weight: 600;
+  margin: 20px 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: var(--font-sans);
+  opacity: 0.7;
 }
-
-@keyframes slideDownFade {
-  from { 
-    opacity: 0; 
-    transform: translateY(-10px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-/* 2. Chat trashing animation (Slide towards bottom left) */
-.trash-slide-out {
-  animation: slideToTrash 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
-}
-
-@keyframes slideToTrash {
-  0% { 
-    opacity: 1; 
-    transform: translate(0, 0) scale(1); 
-  }
-  100% { 
-    opacity: 0; 
-    transform: translate(-30px, 80px) scale(0.6); 
-    height: 0;
-    margin: 0;
-    padding: 0;
-  }
-}
-
-/* 3. Message deletion animation (Shrink and fade) */
-.message-delete-out {
-  animation: shrinkFadeOut 0.3s ease-in forwards;
-}
-
-@keyframes shrinkFadeOut {
-  0% { 
-    opacity: 1; 
-    transform: scale(1); 
-  }
-  100% { 
-    opacity: 0; 
-    transform: scale(0.85); 
-    margin-bottom: -40px; /* Pulls subsequent messages up smoothly */
-  }
-}
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* =========================================================
    UNDO TOAST NOTIFICATION
@@ -426,22 +373,95 @@ details[open] summary ~ * {
 /* =========================================================
    SUGGESTION WORKSPACE 
    ========================================================= */
-.suggestion-layout { display: flex; flex-grow: 1; height: calc(100vh - 160px); background: var(--sidebar-bg); }
-.pdf-workspace { flex-grow: 1; padding: 24px; display: flex; justify-content: center; }
-.pdf-canvas { position: relative; width: 100%; max-width: 900px; background: white; box-shadow: var(--shadow-md); border-radius: var(--radius-sm); }
-.pdf-canvas iframe { border-radius: var(--radius-sm); }
-.suggestion-sidebar { width: 380px; background: white; border-left: 1px solid var(--border-color); display: flex; flex-direction: column; }
-.suggestion-list { flex-grow: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
-.suggestion-card { background: var(--paper); border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-sm); font-family: var(--font-sans); }
-.suggestion-composer { padding: 24px; border-top: 1px solid var(--border-color); background: white; }
-.sidebar-scrollable { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; }
-.sidebar-section { margin-bottom: 24px; }
-.section-label { padding: 0 24px 8px; font-family: var(--font-sans); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-light); font-weight: 700; opacity: 0.7; }
-.empty-list-label { padding: 12px 24px 12px 40px; font-family: var(--font-sans); font-size: 0.85rem; color: var(--ink-light); font-style: italic; opacity: 0.5; }
+.suggestion-layout { 
+  display: flex; 
+  flex-grow: 1; 
+  height: calc(100vh - 160px); 
+  background: var(--sidebar-bg); 
+}
 
-/* =========================================================
-   EMPTY STATE WATERMARK
-   ========================================================= */
+.pdf-workspace { 
+  flex-grow: 1; 
+  padding: 24px; 
+  display: flex; 
+  justify-content: center; 
+}
+
+.pdf-canvas { 
+  position: relative; 
+  width: 100%; 
+  max-width: 900px; 
+  background: white; 
+  box-shadow: var(--shadow-md); 
+  border-radius: var(--radius-sm); 
+}
+
+.pdf-canvas iframe {
+  border-radius: var(--radius-sm);
+}
+
+.suggestion-sidebar { 
+  width: 380px; 
+  background: white; 
+  border-left: 1px solid var(--border-color); 
+  display: flex; 
+  flex-direction: column; 
+}
+
+.suggestion-list { 
+  flex-grow: 1; 
+  overflow-y: auto; 
+  padding: 24px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+}
+
+.suggestion-card { 
+  background: var(--paper); 
+  border: 1px solid var(--border-color); 
+  padding: 16px; 
+  border-radius: var(--radius-sm); 
+  font-family: var(--font-sans);
+}
+
+.suggestion-composer { 
+  padding: 24px; 
+  border-top: 1px solid var(--border-color); 
+  background: white; 
+}
+
+.sidebar-scrollable {
+  flex-grow: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-section {
+  margin-bottom: 24px;
+}
+
+.section-label {
+  padding: 0 24px 8px;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ink-light);
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.empty-list-label {
+  padding: 12px 24px 12px 40px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--ink-light);
+  font-style: italic;
+  opacity: 0.5;
+}
+
 .empty-state {
   position: relative; 
   flex: 1;
@@ -471,13 +491,19 @@ details[open] summary ~ * {
   z-index: 0; 
 }
 
-.empty-state > div { position: relative; z-index: 1; }
+.empty-state > div {
+  position: relative;
+  z-index: 1;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(44, 62, 80, 0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(44, 62, 80, 0.4); }
 
 /* =========================================================
    NEW ANIMATIONS
    ========================================================= */
-
-/* 1. Dropdown Animation */
 details {
   overflow: hidden;
 }
@@ -503,18 +529,6 @@ details[open] summary ~ * {
   }
 }
 
-/* 2. Chat Trashing Animation (Fade Out) */
-.fade-out-chat {
-  animation: simpleFadeOut 0.35s ease-out forwards;
-  pointer-events: none; /* Prevents double-clicking while it fades */
-}
-
-@keyframes simpleFadeOut {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-/* 3. Message deletion animation (Shrink and fade) */
 .message-delete-out {
   animation: shrinkFadeOut 0.3s ease-in forwards;
 }
@@ -531,28 +545,26 @@ details[open] summary ~ * {
   }
 }
 
-@keyframes fadeIn { 
-  from { opacity: 0; transform: translateY(10px); } 
-  to { opacity: 1; transform: translateY(0); } 
-}
-
 /* =========================================================
-   DATE SEPARATOR 
+   VUE TRANSITION GROUP (List Sliding Animations)
    ========================================================= */
-.date-separator {
-  text-align: center;
-  font-size: 0.75rem;
-  color: var(--ink-light);
-  font-weight: 600;
-  margin: 20px 0 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-family: var(--font-sans);
-  opacity: 0.7;
+.chat-list {
+  position: relative; 
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(44, 62, 80, 0.2); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(44, 62, 80, 0.4); }
+.chat-list-move,
+.chat-list-enter-active,
+.chat-list-leave-active {
+  transition: all 0.25s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+}
+
+.chat-list-enter-from,
+.chat-list-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateX(-10px);
+}
+
+.chat-list-leave-active {
+  position: absolute;
+  width: 100%;
+}

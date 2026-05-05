@@ -10,9 +10,6 @@ export default async () => ({
     const graffiti = useGraffiti();
     const session = useGraffitiSession();
     
-    // ANIMATION TRACKER: Keeps track of which chats are fading out to be restored
-    const isRestoring = ref([]);
-    
     const broadSchema = { properties: { value: { type: "object" } } };
     const myDirChannel = computed(() => session.value ? [`my-private-directory-${session.value.actor}`] : []);
     const globalChannel = ["composer-central-public"];
@@ -36,25 +33,15 @@ export default async () => ({
         .sort((a, b) => (b.value.published || 0) - (a.value.published || 0));
     });
 
-    // Delete the "ChatTrash" object to restore it, but with an animation delay
     async function restoreChat(chat) {
       if (!session.value) return;
       const trashObj = trashEntries.value.find(t => t.value.targetChannel === chat.value.channel);
       
       if (trashObj) {
-        // 1. Add channel to array to instantly trigger the CSS fade animation
-        isRestoring.value.push(chat.value.channel);
-        
-        // 2. Wait 350ms for the fade-out to finish, then delete from database
-        setTimeout(async () => {
-          await graffiti.delete(trashObj.url, session.value);
-          
-          // Cleanup state by removing from array
-          isRestoring.value = isRestoring.value.filter(id => id !== chat.value.channel);
-        }, 350);
+        await graffiti.delete(trashObj.url, session.value);
       }
     }
 
-    return { trashedChatsList, restoreChat, session, isRestoring };
+    return { trashedChatsList, restoreChat, session };
   }
 });
