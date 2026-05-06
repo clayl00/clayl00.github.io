@@ -578,3 +578,38 @@ details[open] summary ~ * {
   position: absolute;
   width: 100%;
 }
+
+/* =========================================================
+   UNIVERSAL BUTTON ANIMATION (1.05x Scale)
+   ========================================================= */
+
+/* 1. Ensure all buttons have the correct display mode to support scaling */
+.btn-primary, .btn-outline, .btn-danger, .btn-small, .btn-secondary, .pdf-download-btn, .delete-btn {
+  display: inline-block;
+}
+.btn-icon, .btn-make-sug, .btn-view-sug, .remove-btn, .btn-back {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 2. Apply smooth transitions to all button classes */
+.btn-primary, .btn-outline, .btn-icon, .btn-danger, .btn-small, .btn-secondary, 
+.btn-make-sug, .btn-view-sug, .pdf-download-btn, .delete-btn, .remove-btn, .btn-back {
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 3. Apply the 1.05x scale on hover (ignoring disabled buttons) */
+.btn-primary:hover:not(:disabled),
+.btn-outline:hover:not(:disabled),
+.btn-icon:hover:not(:disabled),
+.btn-danger:hover:not(:disabled),
+.btn-small:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-make-sug:hover, 
+.btn-view-sug:hover,
+.pdf-download-btn:hover,
+.delete-btn:hover,
+.remove-btn:hover,
+.btn-back:hover {
+  transform: scale(1.1);
+}
