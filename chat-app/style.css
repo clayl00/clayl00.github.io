@@ -580,7 +580,7 @@ details[open] summary ~ * {
 }
 
 /* =========================================================
-   UNIVERSAL BUTTON ANIMATION (1.05x Scale)
+   UNIVERSAL BUTTON ANIMATION (1.1x Scale)
    ========================================================= */
 
 /* 1. Ensure all buttons have the correct display mode to support scaling */
@@ -598,7 +598,7 @@ details[open] summary ~ * {
   transition: transform 0.2s ease-in-out, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* 3. Apply the 1.05x scale on hover (ignoring disabled buttons) */
+/* 3. Apply the 1.1x scale on hover (ignoring disabled buttons) */
 .btn-primary:hover:not(:disabled),
 .btn-outline:hover:not(:disabled),
 .btn-icon:hover:not(:disabled),
