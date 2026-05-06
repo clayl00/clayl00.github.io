@@ -25,6 +25,9 @@ export default async () => ({
     const editedTitle = ref("");
     let mutationObserver = null; 
 
+    // REACTIVE HANDLE RESOLUTION
+    const resolvedHandles = ref({});
+
     const broadSchema = { properties: { value: { type: "object" } } };
     const globalDirectory = ["composer-central-public"];
     const myDirChannel = computed(() => session.value ? [`my-private-directory-${session.value.actor}`] : []);
@@ -42,6 +45,59 @@ export default async () => ({
         .filter(m => m?.value?.content !== undefined || m?.value?.attachment)
         .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0)));
 
+    // Track all unique actors in the chat to resolve their handles
+    const uniqueActors = computed(() => {
+      const actors = new Set();
+      if (session.value?.actor) actors.add(session.value.actor);
+      messages.value.forEach(m => { if (m.actor) actors.add(m.actor); });
+      if (chatData.value?.participants) chatData.value.participants.forEach(a => actors.add(a));
+      return Array.from(actors);
+    });
+
+    // Resolve Actor IDs to Usernames asynchronously
+    watch(uniqueActors, (actors) => {
+      actors.forEach(async (actorId) => {
+        if (actorId && !resolvedHandles.value[actorId]) {
+          // 1. Instantly set a clean fallback while we wait for the network
+          let cleanId = actorId.replace('https://', '').replace(/^did:[a-z0-9]+:/i, ''); 
+          resolvedHandles.value[actorId] = cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
+          
+          try {
+            // 2. Fetch the official handle from the Graffiti network
+            const handle = await graffiti.actorToHandle(actorId);
+            if (handle) {
+              // 3. Strip the domain and update the UI
+              resolvedHandles.value[actorId] = handle.replace('.graffiti.actor', '');
+            }
+          } catch (e) {
+            // Fails silently; keeps the fallback
+          }
+        }
+      });
+    }, { immediate: true });
+
+    function getProfileName(actorId) {
+      if (!actorId) return "";
+      return resolvedHandles.value[actorId] || actorId.substring(0, 8);
+    }
+
+    const chatTitle = computed(() => {
+      const data = chatData.value;
+      if (!data) return "Loading...";
+      let name = data.title || "";
+      if (data.participants && session.value?.actor) {
+        const otherActor = data.participants.find(p => p !== session.value.actor);
+        if (otherActor) {
+          const profileName = getProfileName(otherActor);
+          // If the profile name isn't just the fallback hash, use it as the title
+          if (profileName && profileName !== otherActor.replace('https://', '').replace(/^did:[a-z0-9]+:/i, '').substring(0, 8)) {
+            name = profileName;
+          }
+        }
+      }
+      return name.replace('.graffiti.actor', '').replace(/^DM:\s*/i, '');
+    });
+
     const scrollToBottom = () => {
       if (feedContainer.value) feedContainer.value.scrollTop = feedContainer.value.scrollHeight;
     };
@@ -57,39 +113,7 @@ export default async () => ({
     onUnmounted(() => { if (mutationObserver) mutationObserver.disconnect(); });
 
     const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
-    const actorChannels = computed(() => [...new Set([...messages.value.map(m => m.actor), session.value?.actor].filter(Boolean))]);
-    const { objects: profiles } = useGraffitiDiscover(actorChannels, broadSchema, session);
-
-    function getProfileName(actorId) {
-      if (!actorId) return "";
-      const latest = profiles.value.filter(p => p.channels?.includes(actorId) && p.value?.type === 'Profile').sort((a, b) => b.value.published - a.value.published)[0];
-      
-      // If they have a saved handle, strip domain and return
-      if (latest?.value?.handle) return latest.value.handle.replace('.graffiti.actor', '');
-      
-      // Fallback: Clean the raw actor ID.
-      // If it's a short username (like testing.graffiti.actor), it returns "testing".
-      // If it's a long cryptic hash, it truncates to 8 characters.
-      let cleanId = actorId.replace('https://', '').replace('.graffiti.actor', '');
-      return cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
-    }
-
-    const chatTitle = computed(() => {
-      const data = chatData.value;
-      if (!data) return "Loading...";
-      let name = data.title || "";
-      if (data.participants && session.value?.actor) {
-        const otherActor = data.participants.find(p => p !== session.value.actor);
-        if (otherActor) {
-          const profileName = getProfileName(otherActor);
-          if (profileName && profileName !== otherActor.substring(0, 8)) {
-            name = profileName;
-          }
-        }
-      }
-      return name.replace('.graffiti.actor', '').replace(/^DM:\s*/i, '');
-    });
-
+    
     function hasSuggestions(msgUrl) {
       return allSuggestions.value.some(s => s.channels.includes(msgUrl) && s.value?.type === 'Suggestion');
     }

@@ -17,6 +17,9 @@ export default async () => ({
     const dmError = ref("");
     const pendingHide = ref(new Set());
 
+    // REACTIVE HANDLE RESOLUTION
+    const resolvedHandles = ref({});
+
     const broadSchema = { properties: { value: { type: "object" } } };
 
     const myDirChannel = computed(() => session.value ? [`my-private-directory-${session.value.actor}`] : []);
@@ -34,26 +37,42 @@ export default async () => ({
     const chatsFound = computed(() => [...privateEntries.value, ...publicEntries.value].filter(o => o.value?.type === 'Chat'));
     const invitesFound = computed(() => incomingInvites.value.filter(o => o.value?.type === 'ChatInvite'));
 
-    const dmActors = computed(() => {
+    // Track all unique actors across direct messages to resolve their handles
+    const uniqueActors = computed(() => {
       const actors = new Set();
       chatsFound.value.forEach(c => {
         if (c.value?.isPrivate && c.value.participants) {
           c.value.participants.forEach(a => { if (a !== session.value?.actor) actors.add(a); });
         }
       });
-      return [...actors];
+      return Array.from(actors);
     });
 
-    const { objects: profiles } = useGraffitiDiscover(dmActors, broadSchema, session);
+    // Resolve Actor IDs to Usernames asynchronously
+    watch(uniqueActors, (actors) => {
+      actors.forEach(async (actorId) => {
+        if (actorId && !resolvedHandles.value[actorId]) {
+          // 1. Instantly set a clean fallback while we wait for the network
+          let cleanId = actorId.replace('https://', '').replace(/^did:[a-z0-9]+:/i, ''); 
+          resolvedHandles.value[actorId] = cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
+          
+          try {
+            // 2. Fetch the official handle from the network
+            const handle = await graffiti.actorToHandle(actorId);
+            if (handle) {
+              // 3. Strip the domain and update UI
+              resolvedHandles.value[actorId] = handle.replace('.graffiti.actor', '');
+            }
+          } catch (e) {
+            // Fails silently
+          }
+        }
+      });
+    }, { immediate: true });
 
     function getProfileName(actorId) {
-      if (!actorId) return ""; 
-      const latest = profiles.value.filter(p => p.channels?.includes(actorId) && p.value?.type === 'Profile').sort((a, b) => b.value.published - a.value.published)[0];
-      
-      if (latest?.value?.handle) return latest.value.handle.replace('.graffiti.actor', '');
-      
-      let cleanId = actorId.replace('https://', '').replace('.graffiti.actor', '');
-      return cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
+      if (!actorId) return "";
+      return resolvedHandles.value[actorId] || actorId.substring(0, 8);
     }
 
     function formatChatName(chat) {
@@ -63,7 +82,7 @@ export default async () => ({
         const otherActor = chat.value.participants.find(p => p !== session.value.actor);
         if (otherActor) {
           const profileName = getProfileName(otherActor);
-          if (profileName && profileName !== otherActor.substring(0, 8)) {
+          if (profileName && profileName !== otherActor.replace('https://', '').replace(/^did:[a-z0-9]+:/i, '').substring(0, 8)) {
             name = profileName;
           }
         }
