@@ -72,53 +72,27 @@ body {
 /* =========================================================
    BUTTONS & INPUTS
    ========================================================= */
-.btn-primary { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; box-shadow: var(--shadow-sm); display: inline-block; }
-.btn-primary:hover:not(:disabled) { background: var(--primary-hover); box-shadow: var(--shadow-float); }
+.btn-primary { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-float); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--border-color); padding: 8px 20px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; display: inline-block; }
+.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--border-color); padding: 8px 20px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); }
 .btn-outline:hover { background: rgba(0,0,0,0.03); border-color: var(--ink); }
 
-.btn-icon { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 1.2rem; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.btn-icon { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition); flex-shrink: 0; }
+.btn-icon:hover:not(:disabled) { transform: scale(1.05); }
 .btn-icon:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-danger { background-color: #e74c3c; color: white; padding: 8px 16px; font-size: 0.9rem; border-radius: var(--radius-pill); font-weight: bold; border: none; cursor: pointer; display: inline-block; }
+.btn-danger { background-color: #e74c3c; color: white; padding: 8px 16px; font-size: 0.9rem; border-radius: var(--radius-pill); font-weight: bold; border: none; cursor: pointer; transition: var(--transition); }
 .btn-danger:hover { background-color: #c0392b; }
 
-.btn-small { padding: 6px 14px; font-size: 0.8rem; background: var(--primary); border-radius: var(--radius-pill); color: white; border: none; cursor: pointer; display: inline-block; }
-.btn-secondary { background: #3d3d3d; border: 1px solid var(--ink); color: white; display: inline-block; }
+.btn-small { padding: 6px 14px; font-size: 0.8rem; background: var(--primary); border-radius: var(--radius-pill); color: white; border: none; cursor: pointer; }
+.btn-secondary { background: #3d3d3d; border: 1px solid var(--ink); color: white; }
 
 .input-styled { flex-grow: 1; padding: 10px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-pill); font-family: var(--font-sans); font-size: 0.9rem; transition: var(--transition); background: white; }
 .input-styled:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(81, 45, 168, 0.1); }
 
 .edit-input { font-family: var(--font-sans); font-size: 1.2rem; font-weight: bold; padding: 6px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--ink); outline: none; margin-right: 8px; width: 300px; }
-
-/* =========================================================
-   UNIVERSAL BUTTON ANIMATION (1.25 Scale Standard)
-   ========================================================= */
-.btn-primary, .btn-outline, .btn-icon, .btn-danger, .btn-small, .btn-secondary, 
-.btn-make-sug, .btn-view-sug, .pdf-download-btn, .delete-btn, .remove-btn {
-  /* Bouncy bezier curve for the pop effect */
-  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
-              background-color 0.2s ease, 
-              border-color 0.2s ease, 
-              color 0.2s ease, 
-              box-shadow 0.2s ease !important;
-}
-
-.btn-primary:hover:not(:disabled),
-.btn-outline:hover:not(:disabled),
-.btn-icon:hover:not(:disabled),
-.btn-danger:hover:not(:disabled),
-.btn-small:hover:not(:disabled),
-.btn-secondary:hover:not(:disabled),
-.btn-make-sug:hover, 
-.btn-view-sug:hover,
-.pdf-download-btn:hover,
-.delete-btn:hover,
-.remove-btn:hover {
-  transform: scale(1.25) !important;
-}
 
 /* =========================================================
    HOME VIEW (Sidebar & Directory)
@@ -131,6 +105,7 @@ body {
 .input-group { display: flex; gap: 8px; margin-bottom: 12px; }
 
 .chat-list { flex-grow: 1; overflow-y: auto; list-style: none; }
+
 .sidebar-chat-row {
   display: flex;
   align-items: center;
@@ -140,6 +115,9 @@ body {
 }
 .sidebar-chat-row:hover { background: rgba(0,0,0,0.03); }
 .sidebar-chat-row:has(.router-link-active) { background: white; }
+
+.sidebar-chat-row .btn-icon { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.sidebar-chat-row .btn-icon:hover { transform: scale(1.25); }
 
 .chat-item { 
   display: flex; 
@@ -159,6 +137,16 @@ body {
 
 .empty-state { flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; background: var(--paper); }
 .watermark-clef { font-size: 25rem; color: var(--ink); opacity: 0.03; pointer-events: none; user-select: none; }
+
+/* ADD THIS NEW CLASS */
+.main-content-area { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  position: relative; 
+  overflow: hidden; 
+  background-color: var(--paper);
+}
 
 /* =========================================================
    CHAT VIEW (Messages Feed)
@@ -219,7 +207,7 @@ body {
 .message-card.theirs .message-bubble { background: white; color: var(--ink); border: 1px solid var(--border-color); border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 4px; }
 
 /* =========================================================
-   SUGGESTION BUTTONS IN CHAT (Context-Aware)
+   SUGGESTION BUTTONS IN CHAT
    ========================================================= */
 .suggestion-actions { 
   margin-top: 16px; 
@@ -239,6 +227,7 @@ body {
   font-weight: 700;
   border-radius: var(--radius-pill);
   cursor: pointer;
+  transition: var(--transition);
   text-decoration: none;
   font-family: var(--font-sans);
   display: inline-flex;
@@ -262,7 +251,7 @@ body {
 
 .status-label { font-size: 0.75rem; color: var(--ink-light); margin-top: 4px; font-style: italic; font-family: var(--font-sans); }
 .message-actions { margin-top: 4px; display: flex; gap: 10px; }
-.delete-btn { background: transparent; border: none; color: #999; font-size: 0.75rem; cursor: pointer; padding: 0; text-transform: lowercase; font-family: var(--font-sans); font-weight: 600; display: inline-block; }
+.delete-btn { background: transparent; border: none; color: #999; font-size: 0.75rem; cursor: pointer; padding: 0; text-transform: lowercase; transition: color 0.2s; font-family: var(--font-sans); font-weight: 600; }
 .delete-btn:hover { color: #e74c3c; text-decoration: underline; }
 
 .loading-indicator { text-align: center; font-style: italic; opacity: 0.5; padding: 20px; color: var(--ink); font-family: var(--font-sans); }
@@ -291,10 +280,11 @@ body {
   animation: fadeIn 0.2s ease;
 }
 
-.attachment-preview .remove-btn { background: transparent; border: none; color: #e74c3c; font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0 4px; display: inline-flex; }
+.attachment-preview .remove-btn { background: transparent; border: none; color: #e74c3c; font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0 4px; transition: transform 0.2s; }
+.attachment-preview .remove-btn:hover { transform: scale(1.2); }
 
 /* =========================================================
-   PDF ATTACHMENTS (In Feed)
+   PDF & AUDIO ATTACHMENTS (In Feed)
    ========================================================= */
 .pdf-attachment { 
   display: flex; 
@@ -310,11 +300,46 @@ body {
 
 .pdf-header { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-sans); }
 .pdf-name { font-weight: 500; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; display: flex; align-items: center; gap: 6px; }
-.pdf-download-btn { background-color: var(--ink); color: white; text-decoration: none; padding: 6px 12px; border-radius: var(--radius-pill); font-size: 0.8em; font-weight: bold; display: inline-block; }
+.pdf-download-btn { background-color: var(--ink); color: white; text-decoration: none; padding: 6px 12px; border-radius: var(--radius-pill); font-size: 0.8em; font-weight: bold; transition: var(--transition); }
 .pdf-download-btn:hover { background-color: var(--primary); }
 
 .pdf-viewer { width: 100%; height: 650px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background-color: white; }
-.pdf-loading-state { font-style: italic; opacity: 0.7; padding: 10px; font-size: 0.9rem; font-family: var(--font-sans); }
+
+.pdf-loading-state { 
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-style: italic; 
+  opacity: 0.7; 
+  padding: 10px; 
+  font-size: 0.9rem; 
+  font-family: var(--font-sans); 
+}
+
+.loading-spinner {
+  animation: spinner-rotate 1.2s linear infinite;
+  opacity: 0.8;
+}
+
+@keyframes spinner-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* =========================================================
+   DATE SEPARATOR 
+   ========================================================= */
+.date-separator {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--ink-light);
+  font-weight: 600;
+  margin: 20px 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: var(--font-sans);
+  opacity: 0.7;
+}
 
 /* =========================================================
    UNDO TOAST NOTIFICATION
@@ -385,7 +410,6 @@ body {
   border-radius: var(--radius-sm);
 }
 
-/* Sidebar */
 .suggestion-sidebar { 
   width: 380px; 
   background: white; 
@@ -498,10 +522,8 @@ details summary {
   outline: none;
 }
 
-/* Ensure the dropdown wrapper handles the slide-down animation independently of Vue */
-details[open] .dropdown-wrapper {
-  animation: expandDropdown 0.35s cubic-bezier(0.175, 0.885, 0.32, 1) forwards;
-  transform-origin: top;
+details[open] summary ~ * {
+  animation: expandDropdown 0.35s ease-out forwards;
 }
 
 @keyframes expandDropdown {
