@@ -10,9 +10,10 @@ function loadComponent(name) {
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
-    { path: "/", component: loadComponent("home") },
+    { path: "/", component: loadComponent("home"), children: [
+        { path: "chat/:chatId", component: loadComponent("chat"), props: true }
+      ] },
     { path: "/profile", component: loadComponent("profile") },
-    { path: "/chat/:chatId", component: loadComponent("chat"), props: true },
     // Route now expects chatId and messageId as direct segments
     { path: "/suggestion/:chatId/:messageId(.*)", component: loadComponent("suggestion"), props: true },
     { path: "/audio-suggestion/:chatId/:messageId", component: loadComponent("audio-suggestion"), props: true },

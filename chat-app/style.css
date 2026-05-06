@@ -138,6 +138,16 @@ body {
 .empty-state { flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; background: var(--paper); }
 .watermark-clef { font-size: 25rem; color: var(--ink); opacity: 0.03; pointer-events: none; user-select: none; }
 
+/* ADD THIS NEW CLASS */
+.main-content-area { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  position: relative; 
+  overflow: hidden; 
+  background-color: var(--paper);
+}
+
 /* =========================================================
    CHAT VIEW (Messages Feed)
    ========================================================= */

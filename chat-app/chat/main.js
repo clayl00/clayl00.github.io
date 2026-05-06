@@ -1,5 +1,7 @@
 import { ref, computed, nextTick, watch, onMounted, onUnmounted } from "vue";
 import { useGraffiti, useGraffitiSession, useGraffitiDiscover } from "@graffiti-garden/wrapper-vue";
+// IMPORT ROUTER TOOLS
+import { useRouter, useRoute } from "vue-router"; 
 
 export default async () => ({
   props: ["chatId"],
@@ -10,6 +12,8 @@ export default async () => ({
   setup(props) {
     const graffiti = useGraffiti();
     const session = useGraffitiSession();
+    const router = useRouter(); // INITIALIZE ROUTER
+    const route = useRoute();   // INITIALIZE ROUTE
     
     const myMessage = ref("");
     const composer = ref(null); 
@@ -20,7 +24,7 @@ export default async () => ({
     const resolvedMedia = ref({});
     const isEditingTitle = ref(false);
     const editedTitle = ref("");
-    let mutationObserver = null; // Reference for our observer
+    let mutationObserver = null; 
 
     const broadSchema = { properties: { value: { type: "object" } } };
     const globalDirectory = ["composer-central-public"];
@@ -41,9 +45,6 @@ export default async () => ({
         .filter(m => m?.value?.content !== undefined || m?.value?.attachment)
         .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0)));
 
-    // ==========================================
-    // BULLETPROOF SCROLL LOGIC (Mutation Observer)
-    // ==========================================
     const scrollToBottom = () => {
       if (feedContainer.value) {
         feedContainer.value.scrollTop = feedContainer.value.scrollHeight;
@@ -52,26 +53,19 @@ export default async () => ({
 
     onMounted(() => {
       if (feedContainer.value) {
-        // 1. Setup the observer to watch for ANY changes inside the feed
         mutationObserver = new MutationObserver(() => {
           scrollToBottom();
         });
-        
-        // 2. Tell it to watch for child elements being added (messages) and changes within them
         mutationObserver.observe(feedContainer.value, { childList: true, subtree: true });
-        
-        // 3. Do an initial scroll just in case content is already there
         scrollToBottom();
       }
     });
 
     onUnmounted(() => {
-      // Clean up the observer when leaving the chat to save memory
       if (mutationObserver) {
         mutationObserver.disconnect();
       }
     });
-    // ==========================================
 
     const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
     const actorChannels = computed(() => [...new Set([...messages.value.map(m => m.actor), session.value?.actor].filter(Boolean))]);
@@ -108,10 +102,7 @@ export default async () => ({
       if (!msg) return null;
       
       const current = new Date(msg.value?.published || Date.now());
-      
-      if (index === 0) {
-        return formatFriendlyDate(current);
-      }
+      if (index === 0) return formatFriendlyDate(current);
       
       const prevMsg = messages.value[index - 1];
       const previous = new Date(prevMsg.value?.published || Date.now());
@@ -127,9 +118,7 @@ export default async () => ({
         const url = msg.value?.attachment?.url;
         if (url && url.startsWith('graffiti:') && !resolvedMedia.value[url]) {
           resolvedMedia.value[url] = 'loading'; 
-          
           const mediaType = msg.value.attachment.mediaType || 'application/pdf';
-          
           graffiti.getMedia(url, { types: [mediaType] }, session.value).then(media => {
             const blob = media.data instanceof Blob ? media.data : new Blob([media.data], { type: mediaType });
             resolvedMedia.value[url] = URL.createObjectURL(blob);
@@ -179,9 +168,19 @@ export default async () => ({
       } finally { isSending.value = false; }
     }
 
+    // FULLSCREEN TOGGLE LOGIC
+    function toggleFullscreen() {
+      if (route.query.fs === '1') {
+        router.push({ query: {} }); // Return to split view
+      } else {
+        router.push({ query: { fs: '1' } }); // Expand to fullscreen
+      }
+    }
+
     return { 
       messages, myMessage, sendMessage, session, chatTitle, composer, hasSuggestions,
       getProfileName, isDeleting, resolvedMedia, isSending, getDateSeparator,
+      route, toggleFullscreen, // EXPORT NEW TOOLS TO THE TEMPLATE
       deleteMessage: async (m) => {
         isDeleting.value.add(m.url);
         setTimeout(async () => {

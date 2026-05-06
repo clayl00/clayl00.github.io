@@ -1,5 +1,6 @@
 <div class="home-layout">
-  <aside class="sidebar-panel" style="display: flex; flex-direction: column;">
+  
+  <aside class="sidebar-panel" v-show="$route.query.fs !== '1'" style="display: flex; flex-direction: column;">
     
     <div style="padding-bottom: 16px; border-bottom: 1px solid rgba(0,0,0,0.05);">
       <div class="sidebar-header" style="margin-bottom: 8px;">
@@ -74,11 +75,15 @@
     </div>
   </aside>
 
-  <main class="empty-state">
-    <div class="watermark-clef">&#119070;</div>
-    <div style="text-align:center; z-index:1;">
-      <h2 style="font-family: var(--font-serif); margin-bottom: 8px;">Welcome to the Desk</h2>
-      <p style="font-family: var(--font-sans); color: var(--ink-light);">Select a score or start a conversation.</p>
+  <main class="main-content-area">
+    <div v-if="$route.path === '/'" class="empty-state" style="height: 100%; width: 100%;">
+      <div class="watermark-clef">&#119070;</div>
+      <div style="text-align:center; z-index:1;">
+        <h2 style="font-family: var(--font-serif); margin-bottom: 8px;">Welcome to the Desk</h2>
+        <p style="font-family: var(--font-sans); color: var(--ink-light);">Select a score or start a conversation.</p>
+      </div>
     </div>
+    
+    <router-view></router-view>
   </main>
 </div>
