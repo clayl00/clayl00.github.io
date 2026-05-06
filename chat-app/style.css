@@ -73,24 +73,24 @@ body {
    BUTTONS & INPUTS
    ========================================================= */
 .btn-primary { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); display: inline-block; }
-.btn-primary:hover:not(:disabled) { background: var(--primary-hover); transform: scale(1.1); box-shadow: var(--shadow-float); }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); transform: scale(1.05); box-shadow: var(--shadow-float); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--border-color); padding: 8px 20px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-block; }
-.btn-outline:hover:not(:disabled) { background: rgba(0,0,0,0.03); border-color: var(--ink); transform: scale(1.1); }
+.btn-outline:hover:not(:disabled) { background: rgba(0,0,0,0.03); border-color: var(--ink); transform: scale(1.05); }
 
 .btn-icon { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition); flex-shrink: 0; }
-.btn-icon:hover:not(:disabled) { transform: scale(1.1); }
+.btn-icon:hover:not(:disabled) { transform: scale(1.05); }
 .btn-icon:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-danger { background-color: #e74c3c; color: white; padding: 8px 16px; font-size: 0.9rem; border-radius: var(--radius-pill); font-weight: bold; border: none; cursor: pointer; transition: var(--transition); display: inline-block; }
-.btn-danger:hover:not(:disabled) { background-color: #c0392b; transform: scale(1.1); }
+.btn-danger:hover:not(:disabled) { background-color: #c0392b; transform: scale(1.05); }
 
 .btn-small { padding: 6px 14px; font-size: 0.8rem; background: var(--primary); border-radius: var(--radius-pill); color: white; border: none; cursor: pointer; transition: var(--transition); display: inline-block; }
-.btn-small:hover:not(:disabled) { transform: scale(1.1); }
+.btn-small:hover:not(:disabled) { transform: scale(1.05); }
 
 .btn-secondary { background: #3d3d3d; border: 1px solid var(--ink); color: white; transition: var(--transition); display: inline-block; }
-.btn-secondary:hover:not(:disabled) { transform: scale(1.1); }
+.btn-secondary:hover:not(:disabled) { transform: scale(1.05); }
 
 .input-styled { flex-grow: 1; padding: 10px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-pill); font-family: var(--font-sans); font-size: 0.9rem; transition: var(--transition); background: white; }
 .input-styled:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(81, 45, 168, 0.1); }
@@ -120,7 +120,7 @@ body {
 .sidebar-chat-row:has(.router-link-active) { background: white; }
 
 .sidebar-chat-row .btn-icon { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.sidebar-chat-row .btn-icon:hover { transform: scale(1.1); }
+.sidebar-chat-row .btn-icon:hover { transform: scale(1.05); }
 
 .chat-item { 
   display: flex; 
@@ -144,15 +144,7 @@ body {
 /* =========================================================
    CHAT VIEW (Messages Feed)
    ========================================================= */
-.chat-container { 
-  display: flex; 
-  flex-direction: column; 
-  height: calc(100vh - var(--header-height)); 
-  background: var(--paper); 
-  position: relative; 
-  flex: 1;
-  width: 100%;
-}
+.chat-container { display: flex; flex-direction: column; height: calc(100vh - var(--header-height)); background: var(--paper); position: relative; }
 
 .chat-header { 
   padding: 20px 40px; 
@@ -177,7 +169,7 @@ body {
   white-space: nowrap; 
   font-family: var(--font-sans);
 }
-.btn-back:hover { color: var(--primary); transform: scale(1.1); }
+.btn-back:hover { color: var(--primary); transform: scale(1.05); }
 
 .chat-header h3 { font-family: var(--font-serif); margin: 0; font-size: 1.4rem; color: var(--ink); white-space: nowrap; }
 
@@ -235,7 +227,7 @@ body {
   align-items: center;
   justify-content: center;
 }
-.btn-make-sug:hover, .btn-view-sug:hover { transform: scale(1.1); }
+.btn-make-sug:hover, .btn-view-sug:hover { transform: scale(1.05); }
 
 .message-card.mine .btn-make-sug { background: white; color: var(--primary); border: 1px solid white; }
 .message-card.mine .btn-make-sug:hover { background: #f0f0f0; }
@@ -254,7 +246,7 @@ body {
 .status-label { font-size: 0.75rem; color: var(--ink-light); margin-top: 4px; font-style: italic; font-family: var(--font-sans); }
 .message-actions { margin-top: 4px; display: flex; gap: 10px; }
 .delete-btn { display: inline-block; background: transparent; border: none; color: #999; font-size: 0.75rem; cursor: pointer; padding: 0; text-transform: lowercase; transition: var(--transition); font-family: var(--font-sans); font-weight: 600; }
-.delete-btn:hover { color: #e74c3c; text-decoration: underline; transform: scale(1.1); }
+.delete-btn:hover { color: #e74c3c; text-decoration: underline; transform: scale(1.05); }
 
 .loading-indicator { text-align: center; font-style: italic; opacity: 0.5; padding: 20px; color: var(--ink); font-family: var(--font-sans); }
 
@@ -283,7 +275,7 @@ body {
 }
 
 .attachment-preview .remove-btn { display: inline-flex; background: transparent; border: none; color: #e74c3c; font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0 4px; transition: var(--transition); }
-.attachment-preview .remove-btn:hover { transform: scale(1.1); }
+.attachment-preview .remove-btn:hover { transform: scale(1.05); }
 
 /* =========================================================
    PDF & AUDIO ATTACHMENTS (In Feed)
@@ -304,7 +296,7 @@ body {
 .pdf-name { font-weight: 500; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; display: flex; align-items: center; gap: 6px; }
 
 .pdf-download-btn { display: inline-block; background-color: var(--ink); color: white; text-decoration: none; padding: 6px 12px; border-radius: var(--radius-pill); font-size: 0.8em; font-weight: bold; transition: var(--transition); }
-.pdf-download-btn:hover { background-color: var(--primary); transform: scale(1.1); }
+.pdf-download-btn:hover { background-color: var(--primary); transform: scale(1.05); }
 
 .pdf-viewer { width: 100%; height: 650px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background-color: white; }
 .pdf-loading-state { font-style: italic; opacity: 0.7; padding: 10px; font-size: 0.9rem; font-family: var(--font-sans); }
@@ -327,7 +319,7 @@ body {
   box-shadow: var(--shadow-float);
   z-index: 1000;
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-family: var(--font-sans);
   animation: slideUpToast 0.3s ease-out forwards;
 }
