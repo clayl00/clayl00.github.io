@@ -38,8 +38,8 @@
             <router-link :to="'/chat/' + chat.value.channel" class="chat-item">
               {{ chat.value.title }}
             </router-link>
-            <button @click.prevent="trashChat(chat)" class="btn-icon" style="width: 28px; height: 28px; background: transparent; color: var(--ink-light); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center;" title="Move to Trash">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <button @click.prevent="hideChat(chat)" class="btn-icon" style="width: 28px; height: 28px; background: transparent; color: var(--ink-light); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center;" title="Hide Chat">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
             </button>
           </li>
           <li v-if="groupChats.length === 0" key="empty-public" style="padding: 8px 32px; color: gray; font-size: 0.85em;">No public chats.</li>
@@ -58,8 +58,8 @@
                 {{ (chat.value?.participants && session?.actor && chat.value.participants.find(p => p !== session.actor)) ? (getProfileName(chat.value.participants.find(p => p !== session.actor)) || chat.value.title) : chat.value.title }}
               </span>
             </router-link>
-            <button @click.prevent="trashChat(chat)" class="btn-icon" style="width: 28px; height: 28px; background: transparent; color: var(--ink-light); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center;" title="Move to Trash">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <button @click.prevent="hideChat(chat)" class="btn-icon" style="width: 28px; height: 28px; background: transparent; color: var(--ink-light); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center;" title="Hide Chat">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
             </button>
           </li>
           <li v-if="privateMessages.length === 0" key="empty-private" style="padding: 8px 32px; color: gray; font-size: 0.85em;">No direct messages.</li>
@@ -69,8 +69,8 @@
     
     <div style="padding: 16px; border-top: 1px solid var(--border-color); text-align: center;">
       <router-link to="/trash" style="color: var(--ink-light); text-decoration: none; font-weight: bold; font-family: var(--font-sans); font-size: 0.9em; display: inline-flex; align-items: center; gap: 6px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-        View Trash
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+        Hidden Chats
       </router-link>
     </div>
   </aside>

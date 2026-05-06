@@ -16,8 +16,8 @@ export default async () => ({
     const recipientHandle = ref(""); 
     const dmError = ref("");
 
-    // OPTIMISTIC UI: Tracks items we are currently trashing
-    const pendingTrash = ref(new Set());
+    // OPTIMISTIC UI: Tracks items we are currently hiding
+    const pendingHide = ref(new Set());
 
     const broadSchema = { properties: { value: { type: "object" } } };
 
@@ -29,9 +29,10 @@ export default async () => ({
     const { objects: publicEntries } = useGraffitiDiscover(globalChannel, broadSchema);
     const { objects: incomingInvites } = useGraffitiDiscover(discoveryChannel, broadSchema, session);
     
-    const trashSchema = { properties: { value: { properties: { type: { const: "ChatTrash" } } } } };
-    const { objects: trashEntries } = useGraffitiDiscover(myDirChannel, trashSchema, session);
-    const trashedChannels = computed(() => new Set(trashEntries.value.map(t => t.value.targetChannel)));
+    // Supports both old "ChatTrash" and new "ChatHidden" types so you don't lose testing data
+    const hideSchema = { properties: { value: { properties: { type: { enum: ["ChatTrash", "ChatHidden"] } } } } };
+    const { objects: hiddenEntries } = useGraffitiDiscover(myDirChannel, hideSchema, session);
+    const hiddenChannels = computed(() => new Set(hiddenEntries.value.map(t => t.value.targetChannel)));
 
     const chatsFound = computed(() => [...privateEntries.value, ...publicEntries.value].filter(o => o.value?.type === 'Chat'));
     const invitesFound = computed(() => incomingInvites.value.filter(o => o.value?.type === 'ChatInvite'));
@@ -76,8 +77,7 @@ export default async () => ({
       const unique = {};
       chatsFound.value.forEach(c => { unique[c.value.channel] = c; });
       return Object.values(unique)
-        // Instantly filter out any items that are currently in the pendingTrash Set
-        .filter(c => !trashedChannels.value.has(c.value.channel) && !pendingTrash.value.has(c.value.channel))
+        .filter(c => !hiddenChannels.value.has(c.value.channel) && !pendingHide.value.has(c.value.channel))
         .sort((a, b) => (b.value.published || 0) - (a.value.published || 0));
     });
 
@@ -123,29 +123,26 @@ export default async () => ({
       } catch (e) { dmError.value = "Network error."; }
     }
 
-    async function trashChat(chat) {
+    async function hideChat(chat) {
       if (!session.value) return;
       
-      // 1. Instantly trigger the UI animation
-      pendingTrash.value.add(chat.value.channel);
+      pendingHide.value.add(chat.value.channel);
       
       try {
-        // 2. Let the network request process in the background
         await graffiti.post({
-          value: { type: "ChatTrash", targetChannel: chat.value.channel, published: Date.now() },
+          value: { type: "ChatHidden", targetChannel: chat.value.channel, published: Date.now() },
           channels: [`my-private-directory-${session.value.actor}`],
           allowed: [session.value.actor]
         }, session.value);
       } catch (error) {
-        // 3. If the network fails, revert the UI so the chat reappears
-        pendingTrash.value.delete(chat.value.channel);
+        pendingHide.value.delete(chat.value.channel);
       }
     }
 
     return { 
       chats: allChats, privateMessages, groupChats, newChatTitle, 
       createChat, recipientHandle, createDM, dmError, session, 
-      getOtherActor, getProfileName, trashChat
+      getOtherActor, getProfileName, hideChat
     };
   }
 });
