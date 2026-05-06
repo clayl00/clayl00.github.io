@@ -1,6 +1,5 @@
 import { ref, computed, nextTick, watch, onMounted, onUnmounted } from "vue";
 import { useGraffiti, useGraffitiSession, useGraffitiDiscover } from "@graffiti-garden/wrapper-vue";
-// IMPORT ROUTER TOOLS
 import { useRouter, useRoute } from "vue-router"; 
 
 export default async () => ({
@@ -12,8 +11,8 @@ export default async () => ({
   setup(props) {
     const graffiti = useGraffiti();
     const session = useGraffitiSession();
-    const router = useRouter(); // INITIALIZE ROUTER
-    const route = useRoute();   // INITIALIZE ROUTE
+    const router = useRouter(); 
+    const route = useRoute();   
     
     const myMessage = ref("");
     const composer = ref(null); 
@@ -37,8 +36,6 @@ export default async () => ({
         .filter(o => o.value?.channel === props.chatId)
         .sort((a, b) => b.value.published - a.value.published)[0]?.value);
     
-    const chatTitle = computed(() => chatData.value?.title || "Loading...");
-
     const { objects: messageObjects } = useGraffitiDiscover(computed(() => [props.chatId]), broadSchema, session);
     
     const messages = computed(() => [...messageObjects.value]
@@ -46,35 +43,52 @@ export default async () => ({
         .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0)));
 
     const scrollToBottom = () => {
-      if (feedContainer.value) {
-        feedContainer.value.scrollTop = feedContainer.value.scrollHeight;
-      }
+      if (feedContainer.value) feedContainer.value.scrollTop = feedContainer.value.scrollHeight;
     };
 
     onMounted(() => {
       if (feedContainer.value) {
-        mutationObserver = new MutationObserver(() => {
-          scrollToBottom();
-        });
+        mutationObserver = new MutationObserver(() => scrollToBottom());
         mutationObserver.observe(feedContainer.value, { childList: true, subtree: true });
         scrollToBottom();
       }
     });
 
-    onUnmounted(() => {
-      if (mutationObserver) {
-        mutationObserver.disconnect();
-      }
-    });
+    onUnmounted(() => { if (mutationObserver) mutationObserver.disconnect(); });
 
     const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
     const actorChannels = computed(() => [...new Set([...messages.value.map(m => m.actor), session.value?.actor].filter(Boolean))]);
     const { objects: profiles } = useGraffitiDiscover(actorChannels, broadSchema, session);
 
     function getProfileName(actorId) {
+      if (!actorId) return "";
       const latest = profiles.value.filter(p => p.channels?.includes(actorId) && p.value?.type === 'Profile').sort((a, b) => b.value.published - a.value.published)[0];
-      return latest?.value?.handle || actorId.substring(0, 8); 
+      
+      // If they have a saved handle, strip domain and return
+      if (latest?.value?.handle) return latest.value.handle.replace('.graffiti.actor', '');
+      
+      // Fallback: Clean the raw actor ID.
+      // If it's a short username (like testing.graffiti.actor), it returns "testing".
+      // If it's a long cryptic hash, it truncates to 8 characters.
+      let cleanId = actorId.replace('https://', '').replace('.graffiti.actor', '');
+      return cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
     }
+
+    const chatTitle = computed(() => {
+      const data = chatData.value;
+      if (!data) return "Loading...";
+      let name = data.title || "";
+      if (data.participants && session.value?.actor) {
+        const otherActor = data.participants.find(p => p !== session.value.actor);
+        if (otherActor) {
+          const profileName = getProfileName(otherActor);
+          if (profileName && profileName !== otherActor.substring(0, 8)) {
+            name = profileName;
+          }
+        }
+      }
+      return name.replace('.graffiti.actor', '').replace(/^DM:\s*/i, '');
+    });
 
     function hasSuggestions(msgUrl) {
       return allSuggestions.value.some(s => s.channels.includes(msgUrl) && s.value?.type === 'Suggestion');
@@ -84,32 +98,19 @@ export default async () => ({
       const today = new Date();
       const yesterday = new Date();
       yesterday.setDate(today.getDate() - 1);
-      
-      if (date.toDateString() === today.toDateString()) {
-        return "Today";
-      } else if (date.toDateString() === yesterday.toDateString()) {
-        return "Yesterday";
-      } else {
-        return date.toLocaleDateString(undefined, { 
-          weekday: 'short', month: 'short', day: 'numeric', 
-          year: date.getFullYear() === today.getFullYear() ? undefined : 'numeric' 
-        });
-      }
+      if (date.toDateString() === today.toDateString()) return "Today";
+      if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+      return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: date.getFullYear() === today.getFullYear() ? undefined : 'numeric' });
     }
 
     function getDateSeparator(index) {
       const msg = messages.value[index];
       if (!msg) return null;
-      
       const current = new Date(msg.value?.published || Date.now());
       if (index === 0) return formatFriendlyDate(current);
-      
       const prevMsg = messages.value[index - 1];
       const previous = new Date(prevMsg.value?.published || Date.now());
-      
-      if (current.toDateString() !== previous.toDateString()) {
-        return formatFriendlyDate(current);
-      }
+      if (current.toDateString() !== previous.toDateString()) return formatFriendlyDate(current);
       return null;
     }
 
@@ -168,19 +169,18 @@ export default async () => ({
       } finally { isSending.value = false; }
     }
 
-    // FULLSCREEN TOGGLE LOGIC
     function toggleFullscreen() {
       if (route.query.fs === '1') {
-        router.push({ query: {} }); // Return to split view
+        router.push({ query: {} }); 
       } else {
-        router.push({ query: { fs: '1' } }); // Expand to fullscreen
+        router.push({ query: { fs: '1' } }); 
       }
     }
 
     return { 
       messages, myMessage, sendMessage, session, chatTitle, composer, hasSuggestions,
       getProfileName, isDeleting, resolvedMedia, isSending, getDateSeparator,
-      route, toggleFullscreen, // EXPORT NEW TOOLS TO THE TEMPLATE
+      route, toggleFullscreen, 
       deleteMessage: async (m) => {
         isDeleting.value.add(m.url);
         setTimeout(async () => {

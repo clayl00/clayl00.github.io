@@ -15,8 +15,6 @@ export default async () => ({
     const newChatTitle = ref("");
     const recipientHandle = ref(""); 
     const dmError = ref("");
-
-    // OPTIMISTIC UI: Tracks items we are currently hiding
     const pendingHide = ref(new Set());
 
     const broadSchema = { properties: { value: { type: "object" } } };
@@ -29,7 +27,6 @@ export default async () => ({
     const { objects: publicEntries } = useGraffitiDiscover(globalChannel, broadSchema);
     const { objects: incomingInvites } = useGraffitiDiscover(discoveryChannel, broadSchema, session);
     
-    // Supports both old "ChatTrash" and new "ChatHidden" types so you don't lose testing data
     const hideSchema = { properties: { value: { properties: { type: { enum: ["ChatTrash", "ChatHidden"] } } } } };
     const { objects: hiddenEntries } = useGraffitiDiscover(myDirChannel, hideSchema, session);
     const hiddenChannels = computed(() => new Set(hiddenEntries.value.map(t => t.value.targetChannel)));
@@ -52,7 +49,26 @@ export default async () => ({
     function getProfileName(actorId) {
       if (!actorId) return ""; 
       const latest = profiles.value.filter(p => p.channels?.includes(actorId) && p.value?.type === 'Profile').sort((a, b) => b.value.published - a.value.published)[0];
-      return latest?.value?.handle || actorId.substring(0, 8); 
+      
+      if (latest?.value?.handle) return latest.value.handle.replace('.graffiti.actor', '');
+      
+      let cleanId = actorId.replace('https://', '').replace('.graffiti.actor', '');
+      return cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
+    }
+
+    function formatChatName(chat) {
+      if (!chat?.value) return "";
+      let name = chat.value.title || "";
+      if (chat.value.participants && session.value?.actor) {
+        const otherActor = chat.value.participants.find(p => p !== session.value.actor);
+        if (otherActor) {
+          const profileName = getProfileName(otherActor);
+          if (profileName && profileName !== otherActor.substring(0, 8)) {
+            name = profileName;
+          }
+        }
+      }
+      return name.replace('.graffiti.actor', '').replace(/^DM:\s*/i, '');
     }
 
     function getOtherActor(participants) {
@@ -101,11 +117,7 @@ export default async () => ({
       try {
         const recipientActor = await graffiti.handleToActor(recipientHandle.value);
         if (!recipientActor) { dmError.value = "Handle not found."; return; }
-        
-        if (recipientActor === session.value.actor) { 
-          dmError.value = "You cannot DM yourself."; 
-          return; 
-        }
+        if (recipientActor === session.value.actor) { dmError.value = "You cannot DM yourself."; return; }
 
         const chatId = `dm-${[session.value.actor, recipientActor].sort().join('-')}`;
         const chatObj = {
@@ -125,24 +137,20 @@ export default async () => ({
 
     async function hideChat(chat) {
       if (!session.value) return;
-      
       pendingHide.value.add(chat.value.channel);
-      
       try {
         await graffiti.post({
           value: { type: "ChatHidden", targetChannel: chat.value.channel, published: Date.now() },
           channels: [`my-private-directory-${session.value.actor}`],
           allowed: [session.value.actor]
         }, session.value);
-      } catch (error) {
-        pendingHide.value.delete(chat.value.channel);
-      }
+      } catch (error) { pendingHide.value.delete(chat.value.channel); }
     }
 
     return { 
       chats: allChats, privateMessages, groupChats, newChatTitle, 
       createChat, recipientHandle, createDM, dmError, session, 
-      getOtherActor, getProfileName, hideChat
+      getOtherActor, getProfileName, hideChat, formatChatName 
     };
   }
 });
