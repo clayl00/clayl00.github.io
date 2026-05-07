@@ -10,6 +10,9 @@ export default async () => ({
   
   setup(props) {
     const graffiti = useGraffiti();
+
+    window.graffiti = graffiti;
+
     const session = useGraffitiSession();
     const router = useRouter(); 
     const route = useRoute();   
