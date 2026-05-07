@@ -2,10 +2,11 @@
   
   <aside class="sidebar-panel" v-show="$route.query.fs !== '1'" style="display: flex; flex-direction: column;">
     
-    <div style="padding-bottom: 16px; border-bottom: 1px solid rgba(0,0,0,0.05);">
-      <div class="sidebar-header" style="margin-bottom: 8px;">
-        <h4>Public</h4>
-        <div class="input-group">
+    <div style="padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-top: 8px;">
+      
+      <div class="sidebar-header" style="padding-top: 8px; padding-bottom: 0;">
+        <h4 style="margin-bottom: 6px;">Public</h4>
+        <div class="input-group" style="margin-bottom: 12px;">
           <input v-model="newChatTitle" class="input-styled" placeholder="Public title..." @keyup.enter="createChat" />
           <button class="btn-icon" @click="createChat" :disabled="!newChatTitle.trim()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -13,10 +14,10 @@
         </div>
       </div>
 
-      <div class="sidebar-header">
-        <h4>Direct Messages</h4>
-        <div class="input-group">
-          <input v-model="recipientHandle" class="input-styled" placeholder="User handle (user.graffiti.actor)..." @keyup.enter="createDM" />
+      <div class="sidebar-header" style="padding-top: 0; padding-bottom: 8px;">
+        <h4 style="margin-bottom: 6px;">Direct Messages</h4>
+        <div class="input-group" style="margin-bottom: 0;">
+          <input v-model="recipientHandle" class="input-styled" placeholder="User handle..." @keyup.enter="createDM" />
           <button class="btn-icon" @click="createDM" :disabled="!recipientHandle.trim()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           </button>
@@ -25,6 +26,7 @@
           {{ dmError }}
         </div>
       </div>
+
     </div>
 
     <div class="chat-lists-container" style="flex: 1; overflow-y: auto; padding-top: 16px;">
@@ -33,37 +35,41 @@
         <summary style="cursor: pointer; font-weight: 600; padding: 4px 16px; user-select: none; color: var(--ink-light);">
           Public Chats ({{ groupChats.length }})
         </summary>
-        <transition-group name="chat-list" tag="ul" class="chat-list" style="margin-top: 8px;">
-          <li v-for="chat in groupChats" :key="chat.value?.channel" class="sidebar-chat-row">
-            <router-link :to="'/chat/' + chat.value.channel" class="chat-item">
-              {{ chat.value.title }}
-            </router-link>
-            <button @click.prevent="hideChat(chat)" class="btn-icon" style="width: 28px; height: 28px; background: transparent; color: var(--ink-light); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center;" title="Hide Chat">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-            </button>
-          </li>
-          <li v-if="groupChats.length === 0" key="empty-public" style="padding: 8px 32px; color: gray; font-size: 0.85em;">No public chats.</li>
-        </transition-group>
+        <div class="dropdown-wrapper">
+          <transition-group name="chat-list" tag="ul" class="chat-list" style="margin-top: 8px;">
+            <li v-for="chat in groupChats" :key="chat.value?.channel" class="sidebar-chat-row">
+              <router-link :to="'/chat/' + chat.value.channel" class="chat-item">
+                {{ formatChatName(chat) }}
+              </router-link>
+              <button @click.prevent="hideChat(chat)" class="btn-icon" style="width: 28px; height: 28px; background: transparent; color: var(--ink-light); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center;" title="Hide Chat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+              </button>
+            </li>
+            <li v-if="groupChats.length === 0" key="empty-public" style="padding: 8px 32px; color: gray; font-size: 0.85em;">No public chats.</li>
+          </transition-group>
+        </div>
       </details>
 
       <details open>
         <summary style="cursor: pointer; font-weight: 600; padding: 4px 16px; user-select: none; color: var(--ink-light);">
           Direct Messages ({{ privateMessages.length }})
         </summary>
-        <transition-group name="chat-list" tag="ul" class="chat-list" style="margin-top: 8px;">
-          <li v-for="chat in privateMessages" :key="chat.value?.channel" class="sidebar-chat-row">
-            <router-link :to="'/chat/' + chat.value.channel" class="chat-item" style="gap: 8px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; opacity: 0.5;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                {{ (chat.value?.participants && session?.actor && chat.value.participants.find(p => p !== session.actor)) ? (getProfileName(chat.value.participants.find(p => p !== session.actor)) || chat.value.title) : chat.value.title }}
-              </span>
-            </router-link>
-            <button @click.prevent="hideChat(chat)" class="btn-icon" style="width: 28px; height: 28px; background: transparent; color: var(--ink-light); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center;" title="Hide Chat">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-            </button>
-          </li>
-          <li v-if="privateMessages.length === 0" key="empty-private" style="padding: 8px 32px; color: gray; font-size: 0.85em;">No direct messages.</li>
-        </transition-group>
+        <div class="dropdown-wrapper">
+          <transition-group name="chat-list" tag="ul" class="chat-list" style="margin-top: 8px;">
+            <li v-for="chat in privateMessages" :key="chat.value?.channel" class="sidebar-chat-row">
+              <router-link :to="'/chat/' + chat.value.channel" class="chat-item" style="gap: 8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; opacity: 0.5;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  {{ formatChatName(chat) }}
+                </span>
+              </router-link>
+              <button @click.prevent="hideChat(chat)" class="btn-icon" style="width: 28px; height: 28px; background: transparent; color: var(--ink-light); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center;" title="Hide Chat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+              </button>
+            </li>
+            <li v-if="privateMessages.length === 0" key="empty-private" style="padding: 8px 32px; color: gray; font-size: 0.85em;">No direct messages.</li>
+          </transition-group>
+        </div>
       </details>
     </div>
     
@@ -79,8 +85,8 @@
     <div v-if="$route.path === '/'" class="empty-state" style="height: 100%; width: 100%;">
       <div class="watermark-clef">&#119070;</div>
       <div style="text-align:center; z-index:1;">
-        <h2 style="font-family: var(--font-serif); margin-bottom: 8px;">Welcome to the Composer Central</h2>
-        <p style="font-family: var(--font-sans); color: var(--ink-light);">The only messaging app for composers that was made by Clay Lewis</p>
+        <h2 style="font-family: var(--font-serif); margin-bottom: 8px;">Welcome to the Desk</h2>
+        <p style="font-family: var(--font-sans); color: var(--ink-light);">Select a score or start a conversation.</p>
       </div>
     </div>
     
