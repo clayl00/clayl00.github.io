@@ -19,7 +19,6 @@ export default async () => ({
     const feedContainer = ref(null); 
     const isDeleting = ref(new Set());
     
-    // Optimistic UI State
     const optimisticMessages = ref([]);
     const pendingAttachment = ref(null);
     const resolvedMedia = ref({ 'optimistic-loading': 'loading' });
@@ -48,7 +47,6 @@ export default async () => ({
         .filter(m => m?.value?.content !== undefined || m?.value?.attachment)
         .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0)));
 
-    // COMBINE REAL AND OPTIMISTIC MESSAGES
     const allMessages = computed(() => {
       return [...messages.value, ...optimisticMessages.value]
         .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0));
@@ -81,7 +79,13 @@ export default async () => ({
     }, { immediate: true });
 
     const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
-    const actorChannels = computed(() => [...new Set([...messages.value.map(m => m.actor), session.value?.actor].filter(Boolean))]);
+    
+    // Ensure we fetch profiles for everyone in the chat, even if they haven't sent a message yet
+    const actorChannels = computed(() => {
+      const actors = new Set([...messages.value.map(m => m.actor), session.value?.actor].filter(Boolean));
+      if (chatData.value?.participants) chatData.value.participants.forEach(p => actors.add(p));
+      return Array.from(actors);
+    });
     
     const { objects: profiles } = useGraffitiDiscover(actorChannels, broadSchema, session);
 
@@ -89,11 +93,21 @@ export default async () => ({
       if (!selectedActor.value) return null;
       return profiles.value
         .filter(p => p.channels?.includes(selectedActor.value) && p.value?.type === 'Profile')
-        .sort((a, b) => b.value.published - a.value.published)[0];
+        .sort((a, b) => (b.value?.published || 0) - (a.value?.published || 0))[0];
     });
 
+    // UPDATED: Checks for Profile Name first, falls back to handle
     function getProfileName(actorId) {
       if (!actorId) return "";
+      
+      const profile = profiles.value
+        .filter(p => p.channels?.includes(actorId) && p.value?.type === 'Profile')
+        .sort((a, b) => (b.value?.published || 0) - (a.value?.published || 0))[0];
+        
+      if (profile && profile.value?.name && profile.value.name.trim() !== '') {
+        return profile.value.name;
+      }
+      
       return resolvedHandles.value[actorId] || actorId.substring(0, 8);
     }
 
@@ -186,7 +200,6 @@ export default async () => ({
       isEditingTitle.value = false;
     }
 
-    // UPDATED CONTINUOUS SEND LOGIC
     async function sendMessage() {
       if (!session.value || (!myMessage.value.trim() && !pendingAttachment.value)) return;
       
@@ -194,7 +207,6 @@ export default async () => ({
       const currentAttachment = pendingAttachment.value;
       const tempId = 'temp-' + Date.now() + '-' + Math.random();
 
-      // Clear the input instantly so the user can keep typing
       myMessage.value = ""; 
       pendingAttachment.value = null;
       nextTick(() => { 
@@ -202,7 +214,6 @@ export default async () => ({
         scrollToBottom();
       });
 
-      // Push the ghost message to the UI
       const optimisticMsg = {
         url: tempId,
         actor: session.value.actor,
@@ -215,7 +226,6 @@ export default async () => ({
       };
       optimisticMessages.value.push(optimisticMsg);
 
-      // Process network request in background
       try {
         let attachment = undefined;
         if (currentAttachment) {
@@ -228,7 +238,6 @@ export default async () => ({
             allowed: chatData.value?.participants || undefined
         }, session.value);
       } finally { 
-        // Remove ghost message once network responds (the real message drops in via Discovery instantly)
         optimisticMessages.value = optimisticMessages.value.filter(m => m.url !== tempId);
       }
     }
