@@ -10,9 +10,6 @@ export default async () => ({
   
   setup(props) {
     const graffiti = useGraffiti();
-
-    window.graffiti = graffiti;
-
     const session = useGraffitiSession();
     const router = useRouter(); 
     const route = useRoute();   
@@ -28,7 +25,8 @@ export default async () => ({
     const editedTitle = ref("");
     let mutationObserver = null; 
 
-    // REACTIVE HANDLE RESOLUTION
+    // PROFILE MODAL STATE
+    const selectedActor = ref(null);
     const resolvedHandles = ref({});
 
     const broadSchema = { properties: { value: { type: "object" } } };
@@ -48,7 +46,6 @@ export default async () => ({
         .filter(m => m?.value?.content !== undefined || m?.value?.attachment)
         .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0)));
 
-    // Track all unique actors in the chat to resolve their handles
     const uniqueActors = computed(() => {
       const actors = new Set();
       if (session.value?.actor) actors.add(session.value.actor);
@@ -57,27 +54,37 @@ export default async () => ({
       return Array.from(actors);
     });
 
-    // Resolve Actor IDs to Usernames asynchronously
     watch(uniqueActors, (actors) => {
       actors.forEach(async (actorId) => {
         if (actorId && !resolvedHandles.value[actorId]) {
-          // 1. Instantly set a clean fallback while we wait for the network
           let cleanId = actorId.replace('https://', '').replace(/^did:[a-z0-9]+:/i, ''); 
           resolvedHandles.value[actorId] = cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
           
           try {
-            // 2. Fetch the official handle from the Graffiti network
             const handle = await graffiti.actorToHandle(actorId);
             if (handle) {
-              // 3. Strip the domain and update the UI
               resolvedHandles.value[actorId] = handle.replace('.graffiti.actor', '');
             }
           } catch (e) {
-            // Fails silently; keeps the fallback
+            // Fails silently
           }
         }
       });
     }, { immediate: true });
+
+    const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
+    const actorChannels = computed(() => [...new Set([...messages.value.map(m => m.actor), session.value?.actor].filter(Boolean))]);
+    
+    // FETCH PROFILE OBJECTS (to get the Bio)
+    const { objects: profiles } = useGraffitiDiscover(actorChannels, broadSchema, session);
+
+    // FETCH SPECIFIC PROFILE FOR THE MODAL
+    const activeProfile = computed(() => {
+      if (!selectedActor.value) return null;
+      return profiles.value
+        .filter(p => p.channels?.includes(selectedActor.value) && p.value?.type === 'Profile')
+        .sort((a, b) => b.value.published - a.value.published)[0];
+    });
 
     function getProfileName(actorId) {
       if (!actorId) return "";
@@ -92,7 +99,6 @@ export default async () => ({
         const otherActor = data.participants.find(p => p !== session.value.actor);
         if (otherActor) {
           const profileName = getProfileName(otherActor);
-          // If the profile name isn't just the fallback hash, use it as the title
           if (profileName && profileName !== otherActor.replace('https://', '').replace(/^did:[a-z0-9]+:/i, '').substring(0, 8)) {
             name = profileName;
           }
@@ -115,8 +121,6 @@ export default async () => ({
 
     onUnmounted(() => { if (mutationObserver) mutationObserver.disconnect(); });
 
-    const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
-    
     function hasSuggestions(msgUrl) {
       return allSuggestions.value.some(s => s.channels.includes(msgUrl) && s.value?.type === 'Suggestion');
     }
@@ -208,6 +212,9 @@ export default async () => ({
       messages, myMessage, sendMessage, session, chatTitle, composer, hasSuggestions,
       getProfileName, isDeleting, resolvedMedia, isSending, getDateSeparator,
       route, toggleFullscreen, 
+      selectedActor, activeProfile, // EXPORT MODAL TOOLS
+      openProfile: (actorId) => { selectedActor.value = actorId; },
+      closeProfile: () => { selectedActor.value = null; },
       deleteMessage: async (m) => {
         isDeleting.value.add(m.url);
         setTimeout(async () => {

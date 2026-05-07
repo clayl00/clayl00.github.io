@@ -72,22 +72,25 @@ body {
 /* =========================================================
    BUTTONS & INPUTS
    ========================================================= */
-.btn-primary { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); }
-.btn-primary:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-float); }
+.btn-primary { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); display: inline-block; }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); transform: scale(1.05); box-shadow: var(--shadow-float); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--border-color); padding: 8px 20px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); }
-.btn-outline:hover { background: rgba(0,0,0,0.03); border-color: var(--ink); }
+.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--border-color); padding: 8px 20px; border-radius: var(--radius-pill); font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-block; }
+.btn-outline:hover:not(:disabled) { background: rgba(0,0,0,0.03); border-color: var(--ink); transform: scale(1.05); }
 
 .btn-icon { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition); flex-shrink: 0; }
 .btn-icon:hover:not(:disabled) { transform: scale(1.05); }
 .btn-icon:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-danger { background-color: #e74c3c; color: white; padding: 8px 16px; font-size: 0.9rem; border-radius: var(--radius-pill); font-weight: bold; border: none; cursor: pointer; transition: var(--transition); }
-.btn-danger:hover { background-color: #c0392b; }
+.btn-danger { background-color: #e74c3c; color: white; padding: 8px 16px; font-size: 0.9rem; border-radius: var(--radius-pill); font-weight: bold; border: none; cursor: pointer; transition: var(--transition); display: inline-block; }
+.btn-danger:hover:not(:disabled) { background-color: #c0392b; transform: scale(1.05); }
 
-.btn-small { padding: 6px 14px; font-size: 0.8rem; background: var(--primary); border-radius: var(--radius-pill); color: white; border: none; cursor: pointer; }
-.btn-secondary { background: #3d3d3d; border: 1px solid var(--ink); color: white; }
+.btn-small { padding: 6px 14px; font-size: 0.8rem; background: var(--primary); border-radius: var(--radius-pill); color: white; border: none; cursor: pointer; transition: var(--transition); display: inline-block; }
+.btn-small:hover:not(:disabled) { transform: scale(1.05); }
+
+.btn-secondary { background: #3d3d3d; border: 1px solid var(--ink); color: white; transition: var(--transition); display: inline-block; }
+.btn-secondary:hover:not(:disabled) { transform: scale(1.05); }
 
 .input-styled { flex-grow: 1; padding: 10px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-pill); font-family: var(--font-sans); font-size: 0.9rem; transition: var(--transition); background: white; }
 .input-styled:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(81, 45, 168, 0.1); }
@@ -117,7 +120,7 @@ body {
 .sidebar-chat-row:has(.router-link-active) { background: white; }
 
 .sidebar-chat-row .btn-icon { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.sidebar-chat-row .btn-icon:hover { transform: scale(1.25); }
+.sidebar-chat-row .btn-icon:hover { transform: scale(1.05); }
 
 .chat-item { 
   display: flex; 
@@ -138,20 +141,10 @@ body {
 .empty-state { flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; background: var(--paper); }
 .watermark-clef { font-size: 25rem; color: var(--ink); opacity: 0.03; pointer-events: none; user-select: none; }
 
-/* ADD THIS NEW CLASS */
-.main-content-area { 
-  flex: 1; 
-  display: flex; 
-  flex-direction: column; 
-  position: relative; 
-  overflow: hidden; 
-  background-color: var(--paper);
-}
-
 /* =========================================================
    CHAT VIEW (Messages Feed)
    ========================================================= */
-.chat-container { display: flex; flex-direction: column; height: calc(100vh - var(--header-height)); background: var(--paper); position: relative; }
+.chat-container { display: flex; flex-direction: column; height: calc(100vh - var(--header-height)); background: var(--paper); position: relative; flex: 1; width: 100%; }
 
 .chat-header { 
   padding: 20px 40px; 
@@ -176,7 +169,7 @@ body {
   white-space: nowrap; 
   font-family: var(--font-sans);
 }
-.btn-back:hover { color: var(--primary); }
+.btn-back:hover { color: var(--primary); transform: scale(1.05); }
 
 .chat-header h3 { font-family: var(--font-serif); margin: 0; font-size: 1.4rem; color: var(--ink); white-space: nowrap; }
 
@@ -234,6 +227,7 @@ body {
   align-items: center;
   justify-content: center;
 }
+.btn-make-sug:hover, .btn-view-sug:hover { transform: scale(1.05); }
 
 .message-card.mine .btn-make-sug { background: white; color: var(--primary); border: 1px solid white; }
 .message-card.mine .btn-make-sug:hover { background: #f0f0f0; }
@@ -251,8 +245,8 @@ body {
 
 .status-label { font-size: 0.75rem; color: var(--ink-light); margin-top: 4px; font-style: italic; font-family: var(--font-sans); }
 .message-actions { margin-top: 4px; display: flex; gap: 10px; }
-.delete-btn { background: transparent; border: none; color: #999; font-size: 0.75rem; cursor: pointer; padding: 0; text-transform: lowercase; transition: color 0.2s; font-family: var(--font-sans); font-weight: 600; }
-.delete-btn:hover { color: #e74c3c; text-decoration: underline; }
+.delete-btn { display: inline-block; background: transparent; border: none; color: #999; font-size: 0.75rem; cursor: pointer; padding: 0; text-transform: lowercase; transition: var(--transition); font-family: var(--font-sans); font-weight: 600; }
+.delete-btn:hover { color: #e74c3c; text-decoration: underline; transform: scale(1.05); }
 
 .loading-indicator { text-align: center; font-style: italic; opacity: 0.5; padding: 20px; color: var(--ink); font-family: var(--font-sans); }
 
@@ -300,8 +294,9 @@ body {
 
 .pdf-header { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-sans); }
 .pdf-name { font-weight: 500; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; display: flex; align-items: center; gap: 6px; }
-.pdf-download-btn { background-color: var(--ink); color: white; text-decoration: none; padding: 6px 12px; border-radius: var(--radius-pill); font-size: 0.8em; font-weight: bold; transition: var(--transition); }
-.pdf-download-btn:hover { background-color: var(--primary); }
+
+.pdf-download-btn { display: inline-block; background-color: var(--ink); color: white; text-decoration: none; padding: 6px 12px; border-radius: var(--radius-pill); font-size: 0.8em; font-weight: bold; transition: var(--transition); }
+.pdf-download-btn:hover { background-color: var(--primary); transform: scale(1.05); }
 
 .pdf-viewer { width: 100%; height: 650px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background-color: white; }
 
@@ -472,6 +467,15 @@ body {
   opacity: 0.5;
 }
 
+.main-content-area { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  position: relative; 
+  overflow: hidden; 
+  background-color: var(--paper);
+}
+
 .empty-state {
   position: relative; 
   flex: 1;
@@ -580,36 +584,167 @@ details[open] summary ~ * {
 }
 
 /* =========================================================
-   UNIVERSAL BUTTON ANIMATION (1.1x Scale)
+   PROFILE MODAL
+   ========================================================= */
+.clickable-name {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.clickable-name:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.profile-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(253, 250, 243, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.profile-modal {
+  background: white;
+  padding: 32px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+  border: 1px solid var(--border-color);
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  text-align: center;
+  font-family: var(--font-sans);
+}
+
+.profile-modal .close-modal-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  color: var(--ink-light);
+  border: none;
+}
+
+.profile-modal .close-modal-btn:hover {
+  background: rgba(0,0,0,0.05);
+  color: var(--ink);
+  transform: scale(1.1);
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 auto 16px;
+}
+
+.profile-avatar.empty {
+  background: var(--border-color);
+  color: var(--ink-light);
+}
+
+.profile-modal h3 {
+  font-family: var(--font-serif);
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-size: 1.5rem;
+}
+
+.profile-handle {
+  color: var(--ink-light);
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.profile-bio {
+  background: var(--sidebar-bg);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  text-align: left;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.profile-bio-empty {
+  color: var(--ink-light);
+  font-style: italic;
+  margin-top: 16px;
+}
+
+/* =========================================================
+   MOBILE RESPONSIVENESS & ADAPTIVE LAYOUT
    ========================================================= */
 
-/* 1. Ensure all buttons have the correct display mode to support scaling */
-.btn-primary, .btn-outline, .btn-danger, .btn-small, .btn-secondary, .pdf-download-btn, .delete-btn {
-  display: inline-block;
-}
-.btn-icon, .btn-make-sug, .btn-view-sug, .remove-btn, .btn-back {
-  display: inline-flex;
-  align-items: center;
+@media (max-width: 768px) {
+  /* 1. Master-Detail Toggle for Mobile */
+  /* Hides sidebar when chat is open, hides empty state when on home screen */
+  .home-layout.mobile-detail-view .sidebar-panel { display: none !important; }
+  .home-layout:not(.mobile-detail-view) .main-content-area { display: none !important; }
+  
+  /* Make sidebar full width on mobile */
+  .sidebar-panel { width: 100% !important; border-right: none; }
+  
+  /* 2. Header & Navigation */
+  :root { --header-height: 60px; }
+  .app-header { padding: 0 16px; height: var(--header-height); }
+  .site-title { display: none; } /* Hide text to make room for links */
+  .logo-clef { font-size: 1.8rem; }
+  .nav-links { gap: 12px; font-size: 0.9rem; }
+  
+  /* 3. Chat Area Tweaks */
+  .chat-header { padding: 12px 16px; gap: 12px; }
+  .chat-header h3 { font-size: 1.1rem; }
+  .messages-feed { padding: 16px; gap: 16px; }
+  .message-card { max-width: 95%; }
+  .message-bubble { padding: 10px 14px; font-size: 0.95rem; }
+  
+  /* 4. Composer Inputs */
+  .composer-area { padding: 12px 16px; gap: 8px; }
+  .composer-inputs { gap: 8px; }
+  .btn-primary { padding: 8px 16px; font-size: 0.9rem; }
+  .textarea-styled { padding: 10px 12px; font-size: 1rem; } /* 1rem prevents iOS auto-zoom */
+  
+  /* 5. Media & Attachments */
+  .pdf-attachment { width: 100%; padding: 10px; }
+  .pdf-viewer { height: 450px; }
+  .pdf-name { max-width: 150px; }
+  .attachment-preview { max-width: 100%; overflow: hidden; }
+  
+  /* 6. Modals & Profiles */
+  .profile-layout { padding: 20px; }
+  .profile-card { padding: 20px; }
+  .profile-modal { padding: 24px 20px; width: 95%; }
+  
+  /* 7. Suggestion Workspace */
+  .suggestion-layout { flex-direction: column; height: auto; }
+  .suggestion-sidebar { width: 100%; height: 50vh; border-left: none; border-top: 1px solid var(--border-color); }
+  .pdf-workspace { padding: 12px; }
 }
 
-/* 2. Apply smooth transitions to all button classes */
-.btn-primary, .btn-outline, .btn-icon, .btn-danger, .btn-small, .btn-secondary, 
-.btn-make-sug, .btn-view-sug, .pdf-download-btn, .delete-btn, .remove-btn, .btn-back {
-  transition: transform 0.2s ease-in-out, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* 3. Apply the 1.1x scale on hover (ignoring disabled buttons) */
-.btn-primary:hover:not(:disabled),
-.btn-outline:hover:not(:disabled),
-.btn-icon:hover:not(:disabled),
-.btn-danger:hover:not(:disabled),
-.btn-small:hover:not(:disabled),
-.btn-secondary:hover:not(:disabled),
-.btn-make-sug:hover, 
-.btn-view-sug:hover,
-.pdf-download-btn:hover,
-.delete-btn:hover,
-.remove-btn:hover,
-.btn-back:hover {
-  transform: scale(1.1);
+@media (max-width: 480px) {
+  /* Extra small devices (Phones in portrait) */
+  .pdf-name { max-width: 120px; font-size: 0.85em; }
+  .suggestion-actions { flex-direction: column; gap: 8px; }
+  .btn-make-sug, .btn-view-sug { width: 100%; text-align: center; }
+  .message-actions { flex-direction: column; align-items: flex-end; }
+  .undo-toast { width: 90%; flex-direction: column; text-align: center; gap: 10px; }
 }

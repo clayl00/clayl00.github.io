@@ -36,7 +36,9 @@
 
       <div class="message-card" :class="[msg.actor === session?.actor ? 'mine' : 'theirs', { 'message-delete-out': isDeleting.has(msg.url) }]">
         <div class="profile-info">
-          <strong>{{ getProfileName(msg.actor) }}</strong>
+          
+          <strong class="clickable-name" @click="openProfile(msg.actor)" title="View Profile">{{ getProfileName(msg.actor) }}</strong>
+          
           <span>{{ new Date(msg.value?.published || Date.now()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) }}</span>
         </div>
         <div class="message-bubble">
@@ -113,4 +115,30 @@
       <button class="btn-primary" @click="sendMessage" :disabled="isSending || (!myMessage.trim() && !pendingAttachment)">{{ isSending ? 'Sending...' : 'Send' }}</button>
     </div>
   </footer>
+
+  <div v-if="selectedActor" class="profile-modal-overlay" @click.self="closeProfile">
+    <div class="profile-modal">
+      <button class="btn-icon close-modal-btn" @click="closeProfile" title="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+
+      <div v-if="activeProfile" class="profile-content">
+        <div class="profile-avatar">{{ getProfileName(selectedActor).charAt(0).toUpperCase() }}</div>
+        <h3>{{ getProfileName(selectedActor) }}</h3>
+        <p class="profile-handle">@{{ activeProfile.value.handle || 'unknown' }}</p>
+        <div class="profile-bio">
+          <p>{{ activeProfile.value.bio || 'This user has not written a bio yet.' }}</p>
+        </div>
+      </div>
+
+      <div v-else class="profile-content empty">
+        <div class="profile-avatar empty">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
+        <h3>{{ getProfileName(selectedActor) }}</h3>
+        <p class="profile-bio-empty">This user has not set up a profile yet.</p>
+      </div>
+    </div>
+  </div>
+
 </div>
