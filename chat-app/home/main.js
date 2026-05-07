@@ -17,9 +17,7 @@ export default async () => ({
     const dmError = ref("");
     const pendingHide = ref(new Set());
 
-    // REACTIVE HANDLE RESOLUTION
     const resolvedHandles = ref({});
-
     const broadSchema = { properties: { value: { type: "object" } } };
 
     const myDirChannel = computed(() => session.value ? [`my-private-directory-${session.value.actor}`] : []);
@@ -37,7 +35,6 @@ export default async () => ({
     const chatsFound = computed(() => [...privateEntries.value, ...publicEntries.value].filter(o => o.value?.type === 'Chat'));
     const invitesFound = computed(() => incomingInvites.value.filter(o => o.value?.type === 'ChatInvite'));
 
-    // Track all unique actors across direct messages to resolve their handles
     const uniqueActors = computed(() => {
       const actors = new Set();
       chatsFound.value.forEach(c => {
@@ -48,46 +45,69 @@ export default async () => ({
       return Array.from(actors);
     });
 
-    // Resolve Actor IDs to Usernames asynchronously
+    const profileChannels = computed(() => {
+      const channels = new Set(["composer-central-public", "profiles"]);
+      uniqueActors.value.forEach(a => {
+        channels.add(a);
+        channels.add(`discovery-${a}`);
+      });
+      if (session.value?.actor) {
+         channels.add(session.value.actor);
+         channels.add(`discovery-${session.value.actor}`);
+      }
+      return Array.from(channels);
+    });
+    
+    const { objects: dmProfiles } = useGraffitiDiscover(profileChannels, broadSchema, session);
+
     watch(uniqueActors, (actors) => {
       actors.forEach(async (actorId) => {
         if (actorId && !resolvedHandles.value[actorId]) {
-          // 1. Instantly set a clean fallback while we wait for the network
           let cleanId = actorId.replace('https://', '').replace(/^did:[a-z0-9]+:/i, ''); 
           resolvedHandles.value[actorId] = cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
           
           try {
-            // 2. Fetch the official handle from the network
             const handle = await graffiti.actorToHandle(actorId);
             if (handle) {
-              // 3. Strip the domain and update UI
               resolvedHandles.value[actorId] = handle.replace('.graffiti.actor', '');
             }
-          } catch (e) {
-            // Fails silently
-          }
+          } catch (e) {}
         }
       });
     }, { immediate: true });
 
     function getProfileName(actorId) {
       if (!actorId) return "";
-      return resolvedHandles.value[actorId] || actorId.substring(0, 8);
+
+      const allKnownObjects = [...publicEntries.value, ...privateEntries.value, ...dmProfiles.value];
+      
+      const profile = allKnownObjects
+        .filter(p => p.actor === actorId && p.value?.type === 'Profile')
+        .sort((a, b) => (b.value?.published || 0) - (a.value?.published || 0))[0];
+        
+      if (profile && profile.value) {
+        const customName = profile.value.name || profile.value.displayName || profile.value.username;
+        if (customName && typeof customName === 'string' && customName.trim() !== '') {
+          return customName; 
+        }
+      }
+
+      if (resolvedHandles.value[actorId]) {
+        return resolvedHandles.value[actorId].toLowerCase();
+      }
+
+      let cleanId = actorId.replace('https://', '').replace(/^did:[a-z0-9]+:/i, ''); 
+      return cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
     }
 
     function formatChatName(chat) {
       if (!chat?.value) return "";
-      let name = chat.value.title || "";
-      if (chat.value.participants && session.value?.actor) {
-        const otherActor = chat.value.participants.find(p => p !== session.value.actor);
-        if (otherActor) {
-          const profileName = getProfileName(otherActor);
-          if (profileName && profileName !== otherActor.replace('https://', '').replace(/^did:[a-z0-9]+:/i, '').substring(0, 8)) {
-            name = profileName;
-          }
-        }
-      }
-      return name.replace('.graffiti.actor', '').replace(/^DM:\s*/i, '');
+      if (!chat.value.isPrivate) return chat.value.title || "Untitled Chat";
+      
+      const otherActor = chat.value.participants?.find(p => p !== session.value?.actor);
+      if (!otherActor) return "Empty Chat";
+
+      return getProfileName(otherActor);
     }
 
     function getOtherActor(participants) {
@@ -169,7 +189,7 @@ export default async () => ({
     return { 
       chats: allChats, privateMessages, groupChats, newChatTitle, 
       createChat, recipientHandle, createDM, dmError, session, 
-      getOtherActor, getProfileName, hideChat, formatChatName 
+      getOtherActor, hideChat, formatChatName 
     };
   }
 });

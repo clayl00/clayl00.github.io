@@ -71,60 +71,74 @@ export default async () => ({
             if (handle) {
               resolvedHandles.value[actorId] = handle.replace('.graffiti.actor', '');
             }
-          } catch (e) {
-            // Fails silently
-          }
+          } catch (e) {}
         }
       });
     }, { immediate: true });
 
     const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
     
-    // Ensure we fetch profiles for everyone in the chat, even if they haven't sent a message yet
-    const actorChannels = computed(() => {
-      const actors = new Set([...messages.value.map(m => m.actor), session.value?.actor].filter(Boolean));
-      if (chatData.value?.participants) chatData.value.participants.forEach(p => actors.add(p));
-      return Array.from(actors);
+    // WIDE DISCOVERY: Search all common channels to guarantee we find the Profile
+    const profileChannels = computed(() => {
+      const channels = new Set(["composer-central-public", "profiles"]);
+      uniqueActors.value.forEach(a => {
+        channels.add(a);
+        channels.add(`discovery-${a}`);
+      });
+      return Array.from(channels);
     });
     
-    const { objects: profiles } = useGraffitiDiscover(actorChannels, broadSchema, session);
+    const { objects: profiles } = useGraffitiDiscover(profileChannels, broadSchema, session);
 
     const activeProfile = computed(() => {
       if (!selectedActor.value) return null;
-      return profiles.value
-        .filter(p => p.channels?.includes(selectedActor.value) && p.value?.type === 'Profile')
+      const allKnownObjects = [...pubMeta.value, ...privMeta.value, ...profiles.value];
+      return allKnownObjects
+        .filter(p => p.actor === selectedActor.value && p.value?.type === 'Profile')
         .sort((a, b) => (b.value?.published || 0) - (a.value?.published || 0))[0];
     });
 
-    // UPDATED: Checks for Profile Name first, falls back to handle
+    // MASTER FORMATTING FUNCTION
     function getProfileName(actorId) {
       if (!actorId) return "";
       
-      const profile = profiles.value
-        .filter(p => p.channels?.includes(actorId) && p.value?.type === 'Profile')
+      const allKnownObjects = [...pubMeta.value, ...privMeta.value, ...profiles.value];
+      
+      // 1. Search for explicitly authored Profile
+      const profile = allKnownObjects
+        .filter(p => p.actor === actorId && p.value?.type === 'Profile')
         .sort((a, b) => (b.value?.published || 0) - (a.value?.published || 0))[0];
         
-      if (profile && profile.value?.name && profile.value.name.trim() !== '') {
-        return profile.value.name;
+      if (profile && profile.value) {
+        // Check standard name keys just in case
+        const customName = profile.value.name || profile.value.displayName || profile.value.username;
+        if (customName && typeof customName === 'string' && customName.trim() !== '') {
+          return customName; // Return exactly as typed (e.g. Clewis_Test)
+        }
       }
       
-      return resolvedHandles.value[actorId] || actorId.substring(0, 8);
+      // 2. Fallback to Graffiti handle (forced lowercase)
+      if (resolvedHandles.value[actorId]) {
+        return resolvedHandles.value[actorId].toLowerCase(); 
+      }
+      
+      // 3. Absolute fallback to stripped ID
+      let cleanId = actorId.replace('https://', '').replace(/^did:[a-z0-9]+:/i, ''); 
+      return cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
     }
 
     const chatTitle = computed(() => {
       const data = chatData.value;
       if (!data) return "Loading...";
-      let name = data.title || "";
+      if (!data.isPrivate) return data.title || "Untitled Chat";
+      
       if (data.participants && session.value?.actor) {
         const otherActor = data.participants.find(p => p !== session.value.actor);
         if (otherActor) {
-          const profileName = getProfileName(otherActor);
-          if (profileName && profileName !== otherActor.replace('https://', '').replace(/^did:[a-z0-9]+:/i, '').substring(0, 8)) {
-            name = profileName;
-          }
+          return getProfileName(otherActor);
         }
       }
-      return name.replace('.graffiti.actor', '').replace(/^DM:\s*/i, '');
+      return "Direct Message";
     });
 
     const scrollToBottom = () => {
