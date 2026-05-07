@@ -1,3 +1,4 @@
+import { watch } from "vue";
 import { useGraffiti, useGraffitiSession } from "@graffiti-garden/wrapper-vue";
 import { useRouter } from "vue-router";
 
@@ -11,27 +12,23 @@ export default async () => ({
     const session = useGraffitiSession();
     const router = useRouter();
 
-    async function login() {
-      try {
-        await graffiti.login();
-        // Redirect to the home workspace after successful authentication
-        router.push("/"); 
-      } catch (error) {
-        console.error("Login failed:", error);
+    // 1. The button click ONLY triggers the popup. No routing here!
+    function login() {
+      graffiti.toggleLogIn(); 
+    }
+
+    function logout() {
+      if (session.value) {
+        graffiti.toggleLogIn();
       }
     }
 
-    async function logout() {
-      if (session.value) {
-        try {
-          await graffiti.logout(session.value);
-        } catch (error) {
-          console.error("Logout failed:", error);
-        }
+    // 2. Watch the session. When it becomes active, THEN route to home.
+    watch(session, (newSession) => {
+      if (newSession) {
+        router.push("/");
       }
-      // Redirect to login page explicitly
-      router.push("/login"); 
-    }
+    }, { immediate: true }); // immediate: true checks if they are already logged in when the page loads
 
     return { 
       session, 
