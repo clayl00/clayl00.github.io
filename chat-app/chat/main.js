@@ -18,14 +18,16 @@ export default async () => ({
     const composer = ref(null); 
     const feedContainer = ref(null); 
     const isDeleting = ref(new Set());
-    const isSending = ref(false);
+    
+    // Optimistic UI State
+    const optimisticMessages = ref([]);
     const pendingAttachment = ref(null);
-    const resolvedMedia = ref({});
+    const resolvedMedia = ref({ 'optimistic-loading': 'loading' });
+    
     const isEditingTitle = ref(false);
     const editedTitle = ref("");
     let mutationObserver = null; 
 
-    // PROFILE MODAL STATE
     const selectedActor = ref(null);
     const resolvedHandles = ref({});
 
@@ -45,6 +47,12 @@ export default async () => ({
     const messages = computed(() => [...messageObjects.value]
         .filter(m => m?.value?.content !== undefined || m?.value?.attachment)
         .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0)));
+
+    // COMBINE REAL AND OPTIMISTIC MESSAGES
+    const allMessages = computed(() => {
+      return [...messages.value, ...optimisticMessages.value]
+        .sort((a, b) => (a.value?.published || 0) - (b.value?.published || 0));
+    });
 
     const uniqueActors = computed(() => {
       const actors = new Set();
@@ -75,10 +83,8 @@ export default async () => ({
     const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
     const actorChannels = computed(() => [...new Set([...messages.value.map(m => m.actor), session.value?.actor].filter(Boolean))]);
     
-    // FETCH PROFILE OBJECTS (to get the Bio)
     const { objects: profiles } = useGraffitiDiscover(actorChannels, broadSchema, session);
 
-    // FETCH SPECIFIC PROFILE FOR THE MODAL
     const activeProfile = computed(() => {
       if (!selectedActor.value) return null;
       return profiles.value
@@ -135,17 +141,17 @@ export default async () => ({
     }
 
     function getDateSeparator(index) {
-      const msg = messages.value[index];
+      const msg = allMessages.value[index];
       if (!msg) return null;
       const current = new Date(msg.value?.published || Date.now());
       if (index === 0) return formatFriendlyDate(current);
-      const prevMsg = messages.value[index - 1];
+      const prevMsg = allMessages.value[index - 1];
       const previous = new Date(prevMsg.value?.published || Date.now());
       if (current.toDateString() !== previous.toDateString()) return formatFriendlyDate(current);
       return null;
     }
 
-    watch(messages, (newMsgs) => {
+    watch(allMessages, (newMsgs) => {
       newMsgs.forEach(msg => {
         const url = msg.value?.attachment?.url;
         if (url && url.startsWith('graffiti:') && !resolvedMedia.value[url]) {
@@ -180,24 +186,51 @@ export default async () => ({
       isEditingTitle.value = false;
     }
 
+    // UPDATED CONTINUOUS SEND LOGIC
     async function sendMessage() {
       if (!session.value || (!myMessage.value.trim() && !pendingAttachment.value)) return;
-      isSending.value = true;
+      
+      const currentText = myMessage.value;
+      const currentAttachment = pendingAttachment.value;
+      const tempId = 'temp-' + Date.now() + '-' + Math.random();
+
+      // Clear the input instantly so the user can keep typing
+      myMessage.value = ""; 
+      pendingAttachment.value = null;
+      nextTick(() => { 
+        if (composer.value) composer.value.style.height = 'auto'; 
+        scrollToBottom();
+      });
+
+      // Push the ghost message to the UI
+      const optimisticMsg = {
+        url: tempId,
+        actor: session.value.actor,
+        isOptimistic: true,
+        value: { 
+          content: currentText, 
+          published: Date.now(),
+          attachment: currentAttachment ? { name: currentAttachment.name, mediaType: currentAttachment.type, url: 'optimistic-loading' } : undefined
+        }
+      };
+      optimisticMessages.value.push(optimisticMsg);
+
+      // Process network request in background
       try {
         let attachment = undefined;
-        if (pendingAttachment.value) {
-          const url = await graffiti.postMedia({ data: pendingAttachment.value }, session.value);
-          attachment = { name: pendingAttachment.value.name, mediaType: pendingAttachment.value.type, url };
+        if (currentAttachment) {
+          const url = await graffiti.postMedia({ data: currentAttachment }, session.value);
+          attachment = { name: currentAttachment.name, mediaType: currentAttachment.type, url };
         }
         await graffiti.post({ 
-            value: { content: myMessage.value, attachment, published: Date.now() }, 
+            value: { content: currentText, attachment, published: Date.now() }, 
             channels: [props.chatId], 
             allowed: chatData.value?.participants || undefined
         }, session.value);
-        myMessage.value = ""; 
-        pendingAttachment.value = null;
-        nextTick(() => { if (composer.value) composer.value.style.height = 'auto'; });
-      } finally { isSending.value = false; }
+      } finally { 
+        // Remove ghost message once network responds (the real message drops in via Discovery instantly)
+        optimisticMessages.value = optimisticMessages.value.filter(m => m.url !== tempId);
+      }
     }
 
     function toggleFullscreen() {
@@ -209,10 +242,10 @@ export default async () => ({
     }
 
     return { 
-      messages, myMessage, sendMessage, session, chatTitle, composer, hasSuggestions,
-      getProfileName, isDeleting, resolvedMedia, isSending, getDateSeparator,
+      allMessages, myMessage, sendMessage, session, chatTitle, composer, hasSuggestions,
+      getProfileName, isDeleting, resolvedMedia, getDateSeparator,
       route, toggleFullscreen, 
-      selectedActor, activeProfile, // EXPORT MODAL TOOLS
+      selectedActor, activeProfile,
       openProfile: (actorId) => { selectedActor.value = actorId; },
       closeProfile: () => { selectedActor.value = null; },
       deleteMessage: async (m) => {

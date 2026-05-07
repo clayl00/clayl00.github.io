@@ -29,12 +29,12 @@
   </header>
 
   <div class="messages-feed" ref="feedContainer">
-    <template v-for="(msg, index) in messages" :key="msg.url">
+    <template v-for="(msg, index) in allMessages" :key="msg.url">
       <div v-if="getDateSeparator(index)" class="date-separator">
         {{ getDateSeparator(index) }}
       </div>
 
-      <div class="message-card" :class="[msg.actor === session?.actor ? 'mine' : 'theirs', { 'message-delete-out': isDeleting.has(msg.url) }]">
+      <div class="message-card" :class="[msg.actor === session?.actor ? 'mine' : 'theirs', { 'message-delete-out': isDeleting.has(msg.url), 'optimistic': msg.isOptimistic }]">
         <div class="profile-info">
           
           <strong class="clickable-name" @click="openProfile(msg.actor)" title="View Profile">{{ getProfileName(msg.actor) }}</strong>
@@ -60,7 +60,7 @@
               
               <iframe v-else-if="resolvedMedia[msg.value.attachment.url]" :src="resolvedMedia[msg.value.attachment.url]" class="pdf-viewer"></iframe>
               
-              <div class="suggestion-actions">
+              <div v-if="!msg.isOptimistic" class="suggestion-actions">
                 <router-link :to="'/suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=view'" class="btn-view-sug" :class="{'has-content':hasSuggestions(msg.url)}" style="text-decoration:none;">{{ hasSuggestions(msg.url) ? 'View suggestions' : 'No suggestions yet' }}</router-link>
                 <router-link :to="'/suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=make'" class="btn-make-sug" style="text-decoration:none;">Make suggestion</router-link>
               </div>
@@ -82,7 +82,7 @@
               
               <audio v-else-if="resolvedMedia[msg.value.attachment.url]" controls :src="resolvedMedia[msg.value.attachment.url]" style="width: 100%; height: 44px; outline: none; border-radius: 50px; background: white;"></audio>
               
-              <div class="suggestion-actions">
+              <div v-if="!msg.isOptimistic" class="suggestion-actions">
                 <router-link :to="'/audio-suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=view'" class="btn-view-sug" :class="{'has-content':hasSuggestions(msg.url)}" style="text-decoration:none;">{{ hasSuggestions(msg.url) ? 'View suggestions' : 'No suggestions yet' }}</router-link>
                 <router-link :to="'/audio-suggestion/'+chatId+'/'+encodeURIComponent(msg.url)+'?action=make'" class="btn-make-sug" style="text-decoration:none;">Make suggestion</router-link>
               </div>
@@ -91,7 +91,7 @@
           </div>
           <div v-if="msg.value?.content">{{ msg.value.content }}</div>
         </div>
-        <div v-if="msg.actor === session?.actor" class="message-actions">
+        <div v-if="msg.actor === session?.actor && !msg.isOptimistic" class="message-actions">
           <button class="delete-btn" @click="deleteMessage(msg)" :disabled="isDeleting.has(msg.url)">{{ isDeleting.has(msg.url) ? 'deleting...' : 'delete' }}</button>
         </div>
       </div>
@@ -108,11 +108,11 @@
     </div>
     <div class="composer-inputs">
       <input type="file" ref="fileInput" accept="application/pdf, audio/*" style="display:none;" @change="attachFile" />
-      <button class="btn-icon" @click="$refs.fileInput.click()" title="Attach File" :disabled="isSending" style="background:transparent;color:var(--ink-light);border:1px solid var(--border-color);flex-shrink:0;">
+      <button class="btn-icon" @click="$refs.fileInput.click()" title="Attach File" style="background:transparent;color:var(--ink-light);border:1px solid var(--border-color);flex-shrink:0;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
       </button>
-      <textarea class="textarea-styled" ref="composer" v-model="myMessage" @input="autoResize" @keydown.enter="handleEnter" placeholder="Compose..." rows="1" :disabled="isSending"></textarea>
-      <button class="btn-primary" @click="sendMessage" :disabled="isSending || (!myMessage.trim() && !pendingAttachment)">{{ isSending ? 'Sending...' : 'Send' }}</button>
+      <textarea class="textarea-styled" ref="composer" v-model="myMessage" @input="autoResize" @keydown.enter="handleEnter" placeholder="Compose..." rows="1"></textarea>
+      <button class="btn-primary" @click="sendMessage" :disabled="!myMessage.trim() && !pendingAttachment">Send</button>
     </div>
   </footer>
 
