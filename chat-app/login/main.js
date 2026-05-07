@@ -12,23 +12,32 @@ export default async () => ({
     const session = useGraffitiSession();
     const router = useRouter();
 
-    // 1. The button click ONLY triggers the popup. No routing here!
-    function login() {
-      graffiti.toggleLogIn(); 
-    }
-
-    function logout() {
-      if (session.value) {
-        graffiti.toggleLogIn();
+    async function login() {
+      try {
+        // Use the correct method exposed by the wrapper
+        await graffiti.login(); 
+      } catch (error) {
+        // Fails silently if the user closes the popup
+        console.error("Login cancelled or failed:", error);
       }
     }
 
-    // 2. Watch the session. When it becomes active, THEN route to home.
+    async function logout() {
+      if (session.value) {
+        try {
+          await graffiti.logout();
+        } catch (error) {
+          console.error("Logout failed:", error);
+        }
+      }
+    }
+
+    // Safely watch the session. When it becomes active, THEN route to home.
     watch(session, (newSession) => {
       if (newSession) {
         router.push("/");
       }
-    }, { immediate: true }); // immediate: true checks if they are already logged in when the page loads
+    }, { immediate: true }); 
 
     return { 
       session, 
