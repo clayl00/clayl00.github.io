@@ -86,7 +86,6 @@ export default async () => ({
         .sort((a, b) => (b.value?.published || 0) - (a.value?.published || 0))[0];
         
       if (profile && profile.value) {
-        // MATCHING SCHEMA: Checking profile.value.handle first
         const customName = profile.value.handle || profile.value.name || profile.value.displayName;
         if (customName && typeof customName === 'string' && customName.trim() !== '') {
           return customName; 
@@ -103,10 +102,16 @@ export default async () => ({
 
     function formatChatName(chat) {
       if (!chat?.value) return "";
+      
       if (!chat.value.isPrivate) return chat.value.title || "Untitled Chat";
       
       const otherActor = chat.value.participants?.find(p => p !== session.value?.actor);
-      if (!otherActor) return "Empty Chat";
+      
+      if (!otherActor) {
+        return (chat.value.title || "Empty Chat")
+          .replace(/^DM:\s*/i, '')
+          .replace('.graffiti.actor', '');
+      }
 
       return getProfileName(otherActor);
     }
@@ -151,28 +156,75 @@ export default async () => ({
       router.push(`/chat/${chatId}`); 
     }
 
+    // --- UPDATED SMART DM CREATION LOGIC ---
     async function createDM() {
       dmError.value = "";
-      if (!recipientHandle.value.trim() || !session.value) return;
-      try {
-        const recipientActor = await graffiti.handleToActor(recipientHandle.value);
-        if (!recipientActor) { dmError.value = "Handle not found."; return; }
-        if (recipientActor === session.value.actor) { dmError.value = "You cannot DM yourself."; return; }
+      const input = recipientHandle.value.trim();
+      if (!input || !session.value) return;
 
+      try {
+        let recipientActor = null;
+
+        // 1. Check if the input matches any known Custom Profile Name (case-insensitive)
+        const allKnownObjects = [...publicEntries.value, ...privateEntries.value, ...dmProfiles.value];
+        const matchingProfile = allKnownObjects.find(p => {
+          if (p.value?.type === 'Profile') {
+            const customName = p.value.handle || p.value.name || p.value.displayName;
+            return customName && customName.toLowerCase() === input.toLowerCase();
+          }
+          return false;
+        });
+
+        if (matchingProfile) {
+          recipientActor = matchingProfile.actor;
+        }
+
+        // 2. If no profile matches, fall back to testing it as a raw Graffiti network handle
+        if (!recipientActor) {
+          recipientActor = await graffiti.handleToActor(input);
+        }
+
+        // Security / Validation Checks
+        if (!recipientActor) { 
+          dmError.value = "User not found. Try their exact handle or profile name."; 
+          return; 
+        }
+        if (recipientActor === session.value.actor) { 
+          dmError.value = "You cannot DM yourself."; 
+          return; 
+        }
+
+        // Generate the deterministic channel ID
         const chatId = `dm-${[session.value.actor, recipientActor].sort().join('-')}`;
+
+        // 3. Check if we already have a chat with this user
+        const existingChat = allChats.value.find(c => c.value.channel === chatId);
+        if (existingChat) {
+           recipientHandle.value = "";
+           router.push(`/chat/${chatId}`); // Just open it, don't recreate it
+           return;
+        }
+
+        // 4. Create the new chat objects
         const chatObj = {
-          type: "Chat", title: `DM: ${recipientHandle.value}`, channel: chatId,
+          type: "Chat", title: `DM: ${input}`, channel: chatId,
           isPrivate: true, participants: [session.value.actor, recipientActor], published: Date.now()
         };
+        
         await graffiti.post({
           value: chatObj, channels: [`my-private-directory-${session.value.actor}`], allowed: [session.value.actor]
         }, session.value);
+        
         await graffiti.post({
           value: { ...chatObj, type: "ChatInvite" }, channels: [`discovery-${recipientActor}`], allowed: [recipientActor]
         }, session.value);
+        
         recipientHandle.value = "";
         router.push(`/chat/${chatId}`);
-      } catch (e) { dmError.value = "Network error."; }
+        
+      } catch (e) { 
+        dmError.value = "Network error. Please try again."; 
+      }
     }
 
     async function hideChat(chat) {
