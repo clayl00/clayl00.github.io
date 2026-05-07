@@ -110,10 +110,10 @@ export default async () => ({
         .sort((a, b) => (b.value?.published || 0) - (a.value?.published || 0))[0];
         
       if (profile && profile.value) {
-        // Check standard name keys just in case
-        const customName = profile.value.name || profile.value.displayName || profile.value.username;
+        // MATCHING SCHEMA: Checking profile.value.handle first based on your profile page saving logic
+        const customName = profile.value.handle || profile.value.name || profile.value.displayName;
         if (customName && typeof customName === 'string' && customName.trim() !== '') {
-          return customName; // Return exactly as typed (e.g. Clewis_Test)
+          return customName; 
         }
       }
       

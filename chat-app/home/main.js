@@ -86,7 +86,8 @@ export default async () => ({
         .sort((a, b) => (b.value?.published || 0) - (a.value?.published || 0))[0];
         
       if (profile && profile.value) {
-        const customName = profile.value.name || profile.value.displayName || profile.value.username;
+        // MATCHING SCHEMA: Checking profile.value.handle first
+        const customName = profile.value.handle || profile.value.name || profile.value.displayName;
         if (customName && typeof customName === 'string' && customName.trim() !== '') {
           return customName; 
         }
