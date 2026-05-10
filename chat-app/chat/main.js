@@ -78,7 +78,6 @@ export default async () => ({
 
     const { objects: allSuggestions } = useGraffitiDiscover(computed(() => messages.value.map(m => m.url)), broadSchema, session);
     
-    // WIDE DISCOVERY: Search all common channels to guarantee we find the Profile
     const profileChannels = computed(() => {
       const channels = new Set(["composer-central-public", "profiles"]);
       uniqueActors.value.forEach(a => {
@@ -98,31 +97,26 @@ export default async () => ({
         .sort((a, b) => (b.value?.published || 0) - (a.value?.published || 0))[0];
     });
 
-    // MASTER FORMATTING FUNCTION
     function getProfileName(actorId) {
       if (!actorId) return "";
       
       const allKnownObjects = [...pubMeta.value, ...privMeta.value, ...profiles.value];
       
-      // 1. Search for explicitly authored Profile
       const profile = allKnownObjects
         .filter(p => p.actor === actorId && p.value?.type === 'Profile')
         .sort((a, b) => (b.value?.published || 0) - (a.value?.published || 0))[0];
         
       if (profile && profile.value) {
-        // MATCHING SCHEMA: Checking profile.value.handle first based on your profile page saving logic
         const customName = profile.value.handle || profile.value.name || profile.value.displayName;
         if (customName && typeof customName === 'string' && customName.trim() !== '') {
           return customName; 
         }
       }
       
-      // 2. Fallback to Graffiti handle (forced lowercase)
       if (resolvedHandles.value[actorId]) {
         return resolvedHandles.value[actorId].toLowerCase(); 
       }
       
-      // 3. Absolute fallback to stripped ID
       let cleanId = actorId.replace('https://', '').replace(/^did:[a-z0-9]+:/i, ''); 
       return cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
     }
@@ -264,6 +258,21 @@ export default async () => ({
       }
     }
 
+    // NEW: Open PDF in fullscreen
+    function openFullscreen(e) {
+      const container = e.target.closest('.pdf-attachment');
+      const iframe = container.querySelector('.pdf-viewer');
+      if (iframe) {
+        if (iframe.requestFullscreen) {
+          iframe.requestFullscreen();
+        } else if (iframe.webkitRequestFullscreen) { /* Safari */
+          iframe.webkitRequestFullscreen();
+        } else if (iframe.msRequestFullscreen) { /* IE11 */
+          iframe.msRequestFullscreen();
+        }
+      }
+    }
+
     return { 
       allMessages, myMessage, sendMessage, session, chatTitle, composer, hasSuggestions,
       getProfileName, isDeleting, resolvedMedia, getDateSeparator,
@@ -293,7 +302,7 @@ export default async () => ({
       autoResize: () => { if (composer.value) { composer.value.style.height = 'auto'; composer.value.style.height = composer.value.scrollHeight + 'px'; } },
       handleEnter: (e) => { if (!e.shiftKey) { e.preventDefault(); sendMessage(); } },
       isEditingTitle, editedTitle, startEditing: () => { editedTitle.value = chatTitle.value; isEditingTitle.value = true; }, saveTitle,
-      feedContainer 
+      feedContainer, openFullscreen
     };
   }
 });
