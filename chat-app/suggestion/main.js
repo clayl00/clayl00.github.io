@@ -147,9 +147,8 @@ export default async () => ({
     }
 
     // NEW: Open PDF in fullscreen
-    function openFullscreen(e) {
-      const container = e.target.closest('.pdf-workspace');
-      const iframe = container.querySelector('.pdf-viewer');
+    function openFullscreen() {
+      const iframe = document.querySelector('.pdf-viewer');
       if (iframe) {
         if (iframe.requestFullscreen) {
           iframe.requestFullscreen();
