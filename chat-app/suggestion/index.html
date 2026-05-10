@@ -7,8 +7,10 @@
     <div style="display: flex; align-items: center; gap: 12px; justify-content: space-between; flex-grow: 1;">
       <h3>Document Suggestions</h3>
       
-      <button v-if="pdfSrc && pdfSrc !== 'loading'" @click="openFullscreen" class="pdf-download-btn" style="background: transparent; border: 1px solid var(--border-color); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px 8px; color: var(--ink);" title="View Fullscreen">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+      <button v-if="pdfSrc && pdfSrc !== 'loading'" @click="openFullscreen" class="pdf-download-btn" style="background: var(--ink); border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 6px 12px; color: white;" title="View Fullscreen">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+        </svg>
         <span style="font-size: 0.8rem; margin-left: 6px; font-weight: bold; text-transform: uppercase;">Fullscreen</span>
       </button>
 
