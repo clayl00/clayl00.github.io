@@ -25,6 +25,7 @@ export default async () => ({
     const newSuggestionText = ref("");
 
     const broadSchema = { properties: { value: { type: "object" } } };
+    const resolvedHandles = ref({}); // Added for handle fallback resolution
 
     // 1. Fetch Chat Feed: Must pass 'session' to see encrypted messages
     const { objects: chatMessages } = useGraffitiDiscover(
@@ -49,11 +50,56 @@ export default async () => ({
 
     // 3. Profiles
     const actorChannels = computed(() => [...new Set([...suggestions.value.map(s => s.actor), session.value?.actor].filter(Boolean))]);
-    const { objects: profiles } = useGraffitiDiscover(actorChannels, broadSchema, session);
+    
+    // Wide Discovery to catch profiles globally
+    const profileChannels = computed(() => {
+      const channels = new Set(["composer-central-public", "profiles"]);
+      actorChannels.value.forEach(a => {
+        channels.add(a);
+        channels.add(`discovery-${a}`);
+      });
+      return Array.from(channels);
+    });
 
+    const { objects: profiles } = useGraffitiDiscover(profileChannels, broadSchema, session);
+
+    // Async handle resolution
+    watch(actorChannels, (actors) => {
+      actors.forEach(async (actorId) => {
+        if (actorId && !resolvedHandles.value[actorId]) {
+          let cleanId = actorId.replace('https://', '').replace(/^did:[a-z0-9]+:/i, ''); 
+          resolvedHandles.value[actorId] = cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
+          try {
+            const handle = await graffiti.actorToHandle(actorId);
+            if (handle) {
+              resolvedHandles.value[actorId] = handle.replace('.graffiti.actor', '');
+            }
+          } catch (e) {}
+        }
+      });
+    }, { immediate: true });
+
+    // UPDATED FORMATTING FUNCTION to match Chat/Home logic
     function getProfileName(actorId) {
-      const latest = profiles.value.filter(p => p.channels?.includes(actorId) && p.value?.type === 'Profile').sort((a, b) => b.value.published - a.value.published)[0];
-      return latest?.value?.handle || actorId.substring(0, 8); 
+      if (!actorId) return "";
+      
+      const profile = profiles.value
+        .filter(p => p.actor === actorId && p.value?.type === 'Profile')
+        .sort((a, b) => (b.value?.published || 0) - (a.value?.published || 0))[0];
+        
+      if (profile && profile.value) {
+        const customName = profile.value.handle || profile.value.name || profile.value.displayName;
+        if (customName && typeof customName === 'string' && customName.trim() !== '') {
+          return customName; 
+        }
+      }
+      
+      if (resolvedHandles.value[actorId]) {
+        return resolvedHandles.value[actorId].toLowerCase(); 
+      }
+      
+      let cleanId = actorId.replace('https://', '').replace(/^did:[a-z0-9]+:/i, ''); 
+      return cleanId.length > 20 ? cleanId.substring(0, 8) : cleanId;
     }
 
     // PDF Loader
@@ -100,12 +146,28 @@ export default async () => ({
         newPageNum.value = ""; newLocation.value = ""; newSuggestionText.value = "";
     }
 
+    // NEW: Open PDF in fullscreen
+    function openFullscreen(e) {
+      const container = e.target.closest('.pdf-workspace');
+      const iframe = container.querySelector('.pdf-viewer');
+      if (iframe) {
+        if (iframe.requestFullscreen) {
+          iframe.requestFullscreen();
+        } else if (iframe.webkitRequestFullscreen) { /* Safari */
+          iframe.webkitRequestFullscreen();
+        } else if (iframe.msRequestFullscreen) { /* IE11 */
+          iframe.msRequestFullscreen();
+        }
+      }
+    }
+
     return { 
       session, pdfSrc, iframeKey, suggestions, isMakingSuggestion, 
       newPageNum, newLocation, newSuggestionText, chatId: props.chatId,
       getProfileName, startMakingSuggestion: () => isMakingSuggestion.value = true, 
       cancelSuggestion, postSuggestion, jumpToPage,
-      deleteSuggestion: (url) => graffiti.delete(url, session.value)
+      deleteSuggestion: (url) => graffiti.delete(url, session.value),
+      openFullscreen
     };
   }
 });
